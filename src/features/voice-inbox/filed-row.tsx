@@ -10,6 +10,9 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
   const [archived, setArchived] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showFull, setShowFull] = useState(false);
+
+  const hasFullText = item.fullText.length > 0 && item.fullText !== item.summary;
 
   const handlePriorityChange = (next: Priority) => {
     setPriority(next);
@@ -72,6 +75,23 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
           )}
         </div>
         <p className="mt-0.5 line-clamp-3 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
+
+        {hasFullText && (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowFull((v) => !v)}
+              className="mt-1 text-[0.72rem] font-medium text-[var(--ink-faint)] underline-offset-2 hover:text-[var(--accent)] hover:underline"
+            >
+              {showFull ? "Hide full text" : "Show full text"}
+            </button>
+            {showFull && (
+              <p className="mt-1.5 whitespace-pre-wrap rounded-lg border border-[var(--line-soft)] bg-[var(--paper-raised)] px-3 py-2.5 text-[0.82rem] leading-relaxed text-[var(--ink-soft)]">
+                {item.fullText}
+              </p>
+            )}
+          </>
+        )}
 
         <div className="mt-1.5 flex items-center gap-2">
           <select
