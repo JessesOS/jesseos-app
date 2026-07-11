@@ -3,7 +3,8 @@ import { formatDisplayDate } from "@/features/shared/format";
 import type { SectionResult } from "@/features/shared/section-result";
 import type { Priority, VoiceInboxItem, VoiceInboxRow } from "./types";
 
-const VOICE_INBOX_COLUMNS = "id,created_at,title,summary,priority,project_bucket";
+const VOICE_INBOX_COLUMNS =
+  "id,created_at,title,summary,raw_text,transcript,priority,project_bucket";
 
 /** Everything still awaiting a decision — all of it, so nothing hides. */
 export async function getVoiceInboxItems(
@@ -39,6 +40,7 @@ function mapVoiceInboxRow(row: VoiceInboxRow): VoiceInboxItem {
     id: row.id,
     title: row.title ?? "Untitled capture",
     summary: row.summary ?? "No summary yet.",
+    fullText: row.transcript?.trim() || row.raw_text?.trim() || "",
     priority: normalizePriority(row.priority),
     projectBucket: row.project_bucket ?? "unsorted",
     createdAt: formatDisplayDate(row.created_at),

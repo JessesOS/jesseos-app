@@ -14,6 +14,9 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState<null | "filed" | "dismissed" | "kept">(null);
   const [error, setError] = useState<string | null>(null);
+  const [showFull, setShowFull] = useState(false);
+
+  const hasFullText = item.fullText.length > 0 && item.fullText !== item.summary;
 
   const run = (action: () => Promise<ActionResult>, mark: typeof done) => {
     setError(null);
@@ -69,6 +72,23 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
           <p className="mt-1 text-[0.92rem] leading-relaxed text-[var(--ink-soft)]">
             {item.summary}
           </p>
+
+          {hasFullText && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowFull((v) => !v)}
+                className="mt-1.5 text-[0.78rem] font-medium text-[var(--ink-faint)] underline-offset-2 hover:text-[var(--accent)] hover:underline"
+              >
+                {showFull ? "Hide full text" : "Show full text"}
+              </button>
+              {showFull && (
+                <p className="mt-2 whitespace-pre-wrap rounded-lg border border-[var(--line-soft)] bg-[var(--paper-raised)] px-3.5 py-3 text-[0.88rem] leading-relaxed text-[var(--ink-soft)]">
+                  {item.fullText}
+                </p>
+              )}
+            </>
+          )}
 
           {/* review controls */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
