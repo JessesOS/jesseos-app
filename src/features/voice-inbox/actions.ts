@@ -29,6 +29,54 @@ export async function fileCapture(
   }
 }
 
+/** Change priority on an already-filed capture — doesn't touch status/bucket. */
+export async function updatePriority(id: string, priority: string): Promise<ActionResult> {
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase.from("voice_inbox").update({ priority }).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+/** Archive a filed item — gets it out of the Filed view, reversible (not a delete). */
+export async function archiveCapture(id: string): Promise<ActionResult> {
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase
+      .from("voice_inbox")
+      .update({ status: "archived" })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+/** Restore an archived item back to Filed. */
+export async function unarchiveCapture(id: string): Promise<ActionResult> {
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase
+      .from("voice_inbox")
+      .update({ status: "filed" })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
 /** Undo a review decision — send the capture back to the inbox. */
 export async function undoReview(id: string): Promise<ActionResult> {
   try {

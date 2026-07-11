@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import type { DashboardData } from "@/lib/dashboard-data";
 import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
-import { CaptureCard, PriorityDot } from "@/features/voice-inbox/capture-card";
+import { CaptureCard } from "@/features/voice-inbox/capture-card";
+import { FiledRow } from "@/features/voice-inbox/filed-row";
 
 type View = "review" | "filed" | "knowledge";
 
@@ -274,28 +275,6 @@ function Chip({
     >
       {children}
     </button>
-  );
-}
-
-function FiledRow({ item }: { item: VoiceInboxItem }) {
-  return (
-    <li className="flex items-start gap-2.5 border-t border-[var(--line-soft)] py-3 first:border-t-0">
-      <PriorityDot priority={item.priority} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
-          {item.priority !== "low" && (
-            <span
-              className="shrink-0 text-[0.7rem] font-medium capitalize"
-              style={{ color: item.priority === "high" ? "var(--clay)" : "var(--amber)" }}
-            >
-              {item.priority}
-            </span>
-          )}
-        </div>
-        <p className="mt-0.5 line-clamp-1 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
-      </div>
-    </li>
   );
 }
 
