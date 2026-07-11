@@ -79,9 +79,20 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
               <button
                 type="button"
                 onClick={() => setShowFull((v) => !v)}
-                className="mt-1.5 text-[0.78rem] font-medium text-[var(--ink-faint)] underline-offset-2 hover:text-[var(--accent)] hover:underline"
+                aria-expanded={showFull}
+                aria-label={showFull ? "Hide full text" : "Show full text"}
+                className="mt-1.5 flex items-center gap-1 text-[0.78rem] font-medium text-[var(--ink-faint)] hover:text-[var(--accent)]"
               >
-                {showFull ? "Hide full text" : "Show full text"}
+                <svg
+                  width="8"
+                  height="8"
+                  viewBox="0 0 10 10"
+                  className={`transition-transform duration-150 ${showFull ? "rotate-90" : ""}`}
+                  style={{ fill: "currentColor" }}
+                >
+                  <path d="M1 0.5L9 5L1 9.5V0.5Z" />
+                </svg>
+                Full text
               </button>
               {showFull && (
                 <p className="mt-2 whitespace-pre-wrap rounded-lg border border-[var(--line-soft)] bg-[var(--paper-raised)] px-3.5 py-3 text-[0.88rem] leading-relaxed text-[var(--ink-soft)]">
