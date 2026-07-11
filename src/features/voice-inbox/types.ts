@@ -5,6 +5,7 @@ export type VoiceInboxItem = {
   title: string;
   summary: string;
   priority: Priority;
+  projectBucket: string;
   createdAt: string;
 };
 
@@ -14,4 +15,5 @@ export type VoiceInboxRow = {
   title: string | null;
   summary: string | null;
   priority: string | null;
+  project_bucket: string | null;
 };

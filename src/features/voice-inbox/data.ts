@@ -3,8 +3,8 @@ import { formatDisplayDate } from "@/features/shared/format";
 import type { SectionResult } from "@/features/shared/section-result";
 import type { Priority, VoiceInboxItem, VoiceInboxRow } from "./types";
 
-const VOICE_INBOX_COLUMNS = "id,created_at,title,summary,priority";
-const MAX_VOICE_INBOX_ITEMS = 5;
+const VOICE_INBOX_COLUMNS = "id,created_at,title,summary,priority,project_bucket";
+const MAX_VOICE_INBOX_ITEMS = 8;
 
 export async function getVoiceInboxItems(
   supabase: SupabaseClient,
@@ -12,6 +12,7 @@ export async function getVoiceInboxItems(
   const { data, error } = await supabase
     .from("voice_inbox")
     .select(VOICE_INBOX_COLUMNS)
+    .order("created_at", { ascending: false })
     .limit(MAX_VOICE_INBOX_ITEMS);
 
   if (error) {
@@ -27,8 +28,9 @@ function mapVoiceInboxRow(row: VoiceInboxRow): VoiceInboxItem {
   return {
     id: row.id,
     title: row.title ?? "Untitled capture",
-    summary: row.summary ?? "No summary available yet.",
+    summary: row.summary ?? "No summary yet.",
     priority: normalizePriority(row.priority),
+    projectBucket: row.project_bucket ?? "unsorted",
     createdAt: formatDisplayDate(row.created_at),
   };
 }
@@ -38,5 +40,5 @@ function normalizePriority(value: string | null): Priority {
     return value;
   }
 
-  return "low";
+  return "medium";
 }
