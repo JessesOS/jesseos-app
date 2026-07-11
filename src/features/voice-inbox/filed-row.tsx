@@ -71,7 +71,7 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
             </span>
           )}
         </div>
-        <p className="mt-0.5 line-clamp-1 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
+        <p className="mt-0.5 line-clamp-3 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
 
         <div className="mt-1.5 flex items-center gap-2">
           <select
