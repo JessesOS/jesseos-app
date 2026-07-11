@@ -12,6 +12,7 @@ export async function getVoiceInboxItems(
   const { data, error } = await supabase
     .from("voice_inbox")
     .select(VOICE_INBOX_COLUMNS)
+    .eq("status", "pending_review")
     .order("created_at", { ascending: false })
     .limit(MAX_VOICE_INBOX_ITEMS);
 

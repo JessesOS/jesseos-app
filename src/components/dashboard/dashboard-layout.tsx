@@ -1,7 +1,7 @@
-import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import type { ReviewQueueItem } from "@/features/review-queue/types";
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
 import type { DashboardData } from "@/lib/dashboard-data";
+import { CaptureCard } from "@/features/voice-inbox/capture-card";
 
 type DashboardLayoutProps = {
   data: DashboardData;
@@ -78,7 +78,7 @@ export function DashboardLayout({ data }: DashboardLayoutProps) {
           ) : (
             <ul className="mt-1">
               {data.voiceInboxItems.map((item) => (
-                <CaptureRow key={item.id} item={item} />
+                <CaptureCard key={item.id} item={item} />
               ))}
             </ul>
           )}
@@ -133,29 +133,6 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-function CaptureRow({ item }: { item: VoiceInboxItem }) {
-  return (
-    <li className="border-t border-[var(--line-soft)] py-5 first:border-t-0">
-      <div className="flex items-start gap-3">
-        <PriorityDot priority={item.priority} />
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[1.02rem] font-medium leading-snug text-[var(--ink)]">
-            {item.title}
-          </h3>
-          <p className="mt-1 text-[0.92rem] leading-relaxed text-[var(--ink-soft)]">
-            {item.summary}
-          </p>
-          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[0.76rem] text-[var(--ink-faint)]">
-            <BucketTag bucket={item.projectBucket} />
-            <span aria-hidden>·</span>
-            <span>{item.createdAt}</span>
-          </div>
-        </div>
-      </div>
-    </li>
-  );
-}
-
 function ReviewRow({ item }: { item: ReviewQueueItem }) {
   return (
     <li className="border-t border-[var(--line-soft)] py-3.5 first:border-t-0">
@@ -177,30 +154,6 @@ function KnowledgeRow({ item }: { item: KnowledgePacketItem }) {
         {item.summary}
       </p>
     </li>
-  );
-}
-
-function PriorityDot({ priority }: { priority: Priority }) {
-  const color =
-    priority === "high"
-      ? "var(--clay)"
-      : priority === "medium"
-        ? "var(--amber)"
-        : "var(--ink-faint)";
-  return (
-    <span
-      className="mt-2 size-2 shrink-0 rounded-full"
-      style={{ backgroundColor: color }}
-      title={`${priority} priority`}
-    />
-  );
-}
-
-function BucketTag({ bucket }: { bucket: string }) {
-  return (
-    <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 font-medium text-[var(--accent)]">
-      {bucket}
-    </span>
   );
 }
 
