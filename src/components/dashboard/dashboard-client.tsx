@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { DashboardData } from "@/lib/dashboard-data";
 import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
-import { CaptureCard } from "@/features/voice-inbox/capture-card";
+import { CaptureCard, PriorityDot } from "@/features/voice-inbox/capture-card";
 
 type View = "review" | "filed" | "knowledge";
 
@@ -207,7 +207,11 @@ function groupByProject(items: VoiceInboxItem[]): [string, VoiceInboxItem[]][] {
     list.push(item);
     map.set(item.projectBucket, list);
   }
-  return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
+  const groups = Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
+  for (const [, items] of groups) {
+    items.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
+  }
+  return groups;
 }
 
 function Tab({
@@ -275,9 +279,12 @@ function Chip({
 
 function FiledRow({ item }: { item: VoiceInboxItem }) {
   return (
-    <li className="border-t border-[var(--line-soft)] py-3 first:border-t-0">
-      <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
-      <p className="mt-0.5 line-clamp-1 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
+    <li className="flex items-start gap-2.5 border-t border-[var(--line-soft)] py-3 first:border-t-0">
+      <PriorityDot priority={item.priority} />
+      <div className="min-w-0 flex-1">
+        <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
+        <p className="mt-0.5 line-clamp-1 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
+      </div>
     </li>
   );
 }

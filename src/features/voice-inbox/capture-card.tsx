@@ -11,6 +11,7 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
       ? item.projectBucket
       : "unsorted",
   );
+  const [priority, setPriority] = useState<Priority>(item.priority);
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState<null | "filed" | "dismissed" | "kept">(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
   return (
     <li className="border-t border-[var(--line-soft)] py-5 first:border-t-0">
       <div className="flex items-start gap-3">
-        <PriorityDot priority={item.priority} />
+        <PriorityDot priority={priority} />
         <div className="min-w-0 flex-1">
           <h3 className="text-[1.02rem] font-medium leading-snug text-[var(--ink)]">
             {item.title}
@@ -109,10 +110,25 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
               ))}
             </select>
 
-            <ActionButton primary disabled={pending} onClick={() => run(() => fileCapture(item.id, bucket), "filed")}>
+            <label className="sr-only" htmlFor={`priority-${item.id}`}>
+              Priority for {item.title}
+            </label>
+            <select
+              id={`priority-${item.id}`}
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as Priority)}
+              disabled={pending}
+              className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1 text-[0.78rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
+            >
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+
+            <ActionButton primary disabled={pending} onClick={() => run(() => fileCapture(item.id, bucket, priority), "filed")}>
               File
             </ActionButton>
-            <ActionButton disabled={pending} onClick={() => run(() => promoteCapture(item.id, bucket), "kept")}>
+            <ActionButton disabled={pending} onClick={() => run(() => promoteCapture(item.id, bucket, priority), "kept")}>
               Keep as knowledge
             </ActionButton>
             <ActionButton subtle disabled={pending} onClick={() => run(() => dismissCapture(item.id), "dismissed")}>
@@ -160,7 +176,7 @@ function ActionButton({
   );
 }
 
-function PriorityDot({ priority }: { priority: Priority }) {
+export function PriorityDot({ priority }: { priority: Priority }) {
   const color =
     priority === "high"
       ? "var(--clay)"

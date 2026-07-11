@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServiceClient } from "@/lib/supabase/server-client";
 import type { ActionResult } from "./buckets";
 
-/** Accept a capture (optionally correcting its bucket) and file it. */
+/** Accept a capture (optionally correcting its bucket/priority) and file it. */
 export async function fileCapture(
   id: string,
   projectBucket?: string,
+  priority?: string,
 ): Promise<ActionResult> {
   try {
     const supabase = createSupabaseServiceClient();
@@ -16,6 +17,7 @@ export async function fileCapture(
       reviewed_at: new Date().toISOString(),
     };
     if (projectBucket) update.project_bucket = projectBucket;
+    if (priority) update.priority = priority;
 
     const { error } = await supabase.from("voice_inbox").update(update).eq("id", id);
     if (error) return { ok: false, error: error.message };
@@ -65,6 +67,7 @@ export async function dismissCapture(id: string): Promise<ActionResult> {
 export async function promoteCapture(
   id: string,
   projectBucket?: string,
+  priority?: string,
 ): Promise<ActionResult> {
   try {
     const supabase = createSupabaseServiceClient();
@@ -87,13 +90,16 @@ export async function promoteCapture(
     });
     if (insertError) return { ok: false, error: insertError.message };
 
+    const update: Record<string, unknown> = {
+      status: "filed",
+      project_bucket: bucket,
+      reviewed_at: new Date().toISOString(),
+    };
+    if (priority) update.priority = priority;
+
     const { error: updateError } = await supabase
       .from("voice_inbox")
-      .update({
-        status: "filed",
-        project_bucket: bucket,
-        reviewed_at: new Date().toISOString(),
-      })
+      .update(update)
       .eq("id", id);
     if (updateError) return { ok: false, error: updateError.message };
 
