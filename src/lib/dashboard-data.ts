@@ -17,13 +17,16 @@ export type DashboardSectionErrors = {
 export type DashboardCounts = {
   captured: number;
   pendingReview: number;
+  filed: number;
   knowledge: number;
 };
 
 export type DashboardData = {
   voiceInboxItems: VoiceInboxItem[];
+  filedItems: VoiceInboxItem[];
   reviewQueueItems: ReviewQueueItem[];
   knowledgePacketItems: KnowledgePacketItem[];
+  counts: DashboardCounts;
   dashboardStats: DashboardStat[];
   sectionErrors: DashboardSectionErrors;
   dataStatus?: string;
@@ -31,34 +34,22 @@ export type DashboardData = {
 
 export function createDashboardStats(counts: DashboardCounts): DashboardStat[] {
   return [
-    {
-      label: "Captured",
-      value: counts.captured,
-      detail: "total voice + text",
-    },
-    {
-      label: "To review",
-      value: counts.pendingReview,
-      detail: "waiting on you",
-    },
-    {
-      label: "Knowledge",
-      value: counts.knowledge,
-      detail: "kept for reuse",
-    },
+    { label: "To review", value: counts.pendingReview, detail: "waiting on you" },
+    { label: "Filed", value: counts.filed, detail: "sorted into projects" },
+    { label: "Knowledge", value: counts.knowledge, detail: "kept for reuse" },
+    { label: "Captured", value: counts.captured, detail: "total ever" },
   ];
 }
 
 export function createEmptyDashboardData(dataStatus?: string): DashboardData {
+  const counts = { captured: 0, pendingReview: 0, filed: 0, knowledge: 0 };
   return {
     voiceInboxItems: [],
+    filedItems: [],
     reviewQueueItems: [],
     knowledgePacketItems: [],
-    dashboardStats: createDashboardStats({
-      captured: 0,
-      pendingReview: 0,
-      knowledge: 0,
-    }),
+    counts,
+    dashboardStats: createDashboardStats(counts),
     sectionErrors: {},
     dataStatus,
   };

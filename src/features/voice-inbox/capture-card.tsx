@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import type { VoiceInboxItem, Priority } from "./types";
 import { PROJECT_BUCKETS, type ActionResult } from "./buckets";
-import { fileCapture, dismissCapture, promoteCapture } from "./actions";
+import { fileCapture, dismissCapture, promoteCapture, undoReview } from "./actions";
 
 export function CaptureCard({ item }: { item: VoiceInboxItem }) {
   const [bucket, setBucket] = useState(
@@ -27,16 +27,33 @@ export function CaptureCard({ item }: { item: VoiceInboxItem }) {
     });
   };
 
+  const handleUndo = () => {
+    setError(null);
+    startTransition(async () => {
+      const result = await undoReview(item.id);
+      if (result.ok) setDone(null);
+      else setError(result.error);
+    });
+  };
+
   // Once acted on, collapse into a quiet confirmation line (revalidation will
   // drop it from the list on the next load; this gives instant feedback).
   if (done) {
     const label =
       done === "filed" ? "Filed" : done === "kept" ? "Kept as knowledge" : "Dismissed";
     return (
-      <li className="border-t border-[var(--line-soft)] py-4 first:border-t-0">
-        <p className="text-[0.9rem] text-[var(--ink-faint)]">
+      <li className="flex items-center gap-3 border-t border-[var(--line-soft)] py-4 first:border-t-0">
+        <p className="min-w-0 flex-1 truncate text-[0.9rem] text-[var(--ink-faint)]">
           <span className="text-[var(--accent)]">✓</span> {label} — {item.title}
         </p>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={handleUndo}
+          className="shrink-0 text-[0.8rem] font-medium text-[var(--ink-soft)] underline-offset-2 hover:text-[var(--accent)] hover:underline disabled:opacity-50"
+        >
+          Undo
+        </button>
       </li>
     );
   }

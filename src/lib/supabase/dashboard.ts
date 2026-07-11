@@ -1,6 +1,5 @@
 import { getKnowledgePacketItems } from "@/features/knowledge-packets/data";
-import { getReviewQueueItems } from "@/features/review-queue/data";
-import { getVoiceInboxItems } from "@/features/voice-inbox/data";
+import { getFiledItems, getVoiceInboxItems } from "@/features/voice-inbox/data";
 import {
   createDashboardStats,
   createEmptyDashboardData,
@@ -19,47 +18,50 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  const [voiceInbox, reviewQueue, knowledgePackets, counts] = await Promise.all([
+  const [voiceInbox, filed, knowledgePackets, counts] = await Promise.all([
     getVoiceInboxItems(supabase),
-    getReviewQueueItems(supabase),
+    getFiledItems(supabase),
     getKnowledgePacketItems(supabase),
     getCounts(supabase),
   ]);
 
-  const data = {
-    voiceInboxItems: voiceInbox.items,
-    reviewQueueItems: reviewQueue.items,
-    knowledgePacketItems: knowledgePackets.items,
-  };
-
   return {
-    ...data,
+    voiceInboxItems: voiceInbox.items,
+    filedItems: filed.items,
+    reviewQueueItems: [],
+    knowledgePacketItems: knowledgePackets.items,
+    counts,
     dashboardStats: createDashboardStats(counts),
     sectionErrors: {
       voiceInbox: voiceInbox.error,
-      reviewQueue: reviewQueue.error,
+      reviewQueue: filed.error,
       knowledgePackets: knowledgePackets.error,
     },
   };
 }
 
 /**
- * True totals — counted server-side, not derived from the (capped) item lists,
- * so "35 pending" reads as 35 rather than the fetch limit.
+ * True totals — counted server-side, not derived from the item lists, so a
+ * "35 to review" reads as 35.
  */
 async function getCounts(supabase: SupabaseClient): Promise<DashboardCounts> {
-  const [capturedRes, pendingRes, knowledgeRes] = await Promise.all([
-    supabase.from("voice_inbox").select("*", { count: "exact", head: true }),
-    supabase
-      .from("voice_inbox")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending_review"),
+  const countBy = (status?: string) => {
+    let q = supabase.from("voice_inbox").select("*", { count: "exact", head: true });
+    if (status) q = q.eq("status", status);
+    return q;
+  };
+
+  const [capturedRes, pendingRes, filedRes, knowledgeRes] = await Promise.all([
+    countBy(),
+    countBy("pending_review"),
+    countBy("filed"),
     supabase.from("knowledge_packets").select("*", { count: "exact", head: true }),
   ]);
 
   return {
     captured: capturedRes.count ?? 0,
     pendingReview: pendingRes.count ?? 0,
+    filed: filedRes.count ?? 0,
     knowledge: knowledgeRes.count ?? 0,
   };
 }

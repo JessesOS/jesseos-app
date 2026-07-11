@@ -27,6 +27,23 @@ export async function fileCapture(
   }
 }
 
+/** Undo a review decision — send the capture back to the inbox. */
+export async function undoReview(id: string): Promise<ActionResult> {
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase
+      .from("voice_inbox")
+      .update({ status: "pending_review", reviewed_at: null })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
 /** Dismiss a capture — keep the record, remove it from the inbox. */
 export async function dismissCapture(id: string): Promise<ActionResult> {
   try {
