@@ -1,4 +1,5 @@
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
+import type { Project } from "@/features/projects/types";
 import type { ReviewQueueItem } from "@/features/review-queue/types";
 import type { VoiceInboxItem } from "@/features/voice-inbox/types";
 
@@ -24,6 +25,7 @@ export type DashboardCounts = {
 export type DashboardData = {
   voiceInboxItems: VoiceInboxItem[];
   filedItems: VoiceInboxItem[];
+  projects: Project[];
   reviewQueueItems: ReviewQueueItem[];
   knowledgePacketItems: KnowledgePacketItem[];
   counts: DashboardCounts;
@@ -46,6 +48,7 @@ export function createEmptyDashboardData(dataStatus?: string): DashboardData {
   return {
     voiceInboxItems: [],
     filedItems: [],
+    projects: [],
     reviewQueueItems: [],
     knowledgePacketItems: [],
     counts,

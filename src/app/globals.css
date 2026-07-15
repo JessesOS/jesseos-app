@@ -6,7 +6,7 @@
   --paper-raised: #fdfcfa;
   --ink: #23201b;
   --ink-soft: #6f6a61;
-  --ink-faint: #a49d92;
+  --ink-faint: #8a8275; /* darkened from #a49d92 (2.4:1 on paper) to ~3.4:1 — keeps the faint layer distinct from --ink-soft */
   --line: #e9e5dd;
   --line-soft: #f0ede6;
   --accent: #4f6f5e; /* muted sage */

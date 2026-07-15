@@ -111,6 +111,35 @@ export async function dismissCapture(id: string): Promise<ActionResult> {
   }
 }
 
+/** Short-lived signed URL for a capture's raw audio, for playback on the card. */
+export async function getAudioUrl(
+  id: string,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  try {
+    const supabase = createSupabaseServiceClient();
+
+    const { data: row, error: readError } = await supabase
+      .from("voice_inbox")
+      .select("audio_path")
+      .eq("id", id)
+      .single();
+    if (readError || !row?.audio_path) {
+      return { ok: false, error: readError?.message ?? "No audio for this capture" };
+    }
+
+    const { data, error } = await supabase.storage
+      .from("voice-audio")
+      .createSignedUrl(row.audio_path, 60 * 10);
+    if (error || !data?.signedUrl) {
+      return { ok: false, error: error?.message ?? "Could not sign audio URL" };
+    }
+
+    return { ok: true, url: data.signedUrl };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
 /** File a capture AND keep it as enduring knowledge. */
 export async function promoteCapture(
   id: string,

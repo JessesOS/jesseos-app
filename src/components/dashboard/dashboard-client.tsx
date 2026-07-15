@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DashboardData } from "@/lib/dashboard-data";
 import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
-import { CaptureCard } from "@/features/voice-inbox/capture-card";
+import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capture-card";
 import { FiledRow } from "@/features/voice-inbox/filed-row";
 
 type View = "review" | "filed" | "knowledge";
@@ -15,6 +15,11 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   const [view, setView] = useState<View>("review");
   const [priority, setPriority] = useState<"all" | Priority>("all");
   const [project, setProject] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(data.counts.pendingReview > 15);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [showKeyHints, setShowKeyHints] = useState(false);
+
+  const projectNames = useMemo(() => data.projects.map((p) => p.name), [data.projects]);
 
   const projectsInInbox = useMemo(
     () => Array.from(new Set(data.voiceInboxItems.map((i) => i.projectBucket))).sort(),
@@ -29,6 +34,85 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   }, [data.voiceInboxItems, priority, project]);
 
   const filedByProject = useMemo(() => groupByProject(data.filedItems), [data.filedItems]);
+
+  // --- keyboard triage (desktop): j/k move, f file-as-suggested, g keep, x dismiss, u undo ---
+  const handlesRef = useRef(new Map<string, CaptureCardHandle>());
+  const registerHandle = useCallback((id: string, handle: CaptureCardHandle | null) => {
+    if (handle) handlesRef.current.set(id, handle);
+    else handlesRef.current.delete(id);
+  }, []);
+
+  const pendingIdsRef = useRef<string[]>([]);
+  const focusedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    pendingIdsRef.current = pending.map((i) => i.id);
+    focusedIdRef.current = focusedId;
+  });
+
+  useEffect(() => {
+    if (view !== "review") return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "SELECT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const ids = pendingIdsRef.current;
+      if (ids.length === 0) return;
+
+      const move = (delta: 1 | -1) => {
+        e.preventDefault();
+        setFocusedId((current) => {
+          const idx = current ? ids.indexOf(current) : -1;
+          if (idx === -1) return delta === 1 ? ids[0] : ids[ids.length - 1];
+          const next = Math.min(Math.max(idx + delta, 0), ids.length - 1);
+          return ids[next];
+        });
+      };
+
+      switch (e.key) {
+        case "j":
+        case "ArrowDown":
+          move(1);
+          break;
+        case "k":
+        case "ArrowUp":
+          move(-1);
+          break;
+        case "Escape":
+          setFocusedId(null);
+          break;
+        case "?":
+          setShowKeyHints((v) => !v);
+          break;
+        case "f":
+        case "g":
+        case "x":
+        case "u": {
+          const current = focusedIdRef.current;
+          const handle = current ? handlesRef.current.get(current) : undefined;
+          if (!handle) break;
+          e.preventDefault();
+          if (e.key === "f") handle.primary();
+          else if (e.key === "g") handle.keep();
+          else if (e.key === "x") handle.dismiss();
+          else handle.undo();
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [view]);
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
@@ -105,33 +189,55 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         {/* REVIEW */}
         {view === "review" && (
           <section className="mt-7">
-            {/* filters */}
+            {/* filters — collapsed behind a toggle until the queue gets big */}
             <div className="flex flex-col gap-3 border-b border-[var(--line-soft)] pb-4">
-              <FilterRow label="Priority">
-                <Chip active={priority === "all"} onClick={() => setPriority("all")}>
-                  All
-                </Chip>
-                {(["high", "medium", "low"] as Priority[]).map((p) => (
-                  <Chip key={p} active={priority === p} onClick={() => setPriority(p)}>
-                    {p}
-                  </Chip>
-                ))}
-              </FilterRow>
-              {projectsInInbox.length > 1 && (
-                <FilterRow label="Project">
-                  <select
-                    value={project}
-                    onChange={(e) => setProject(e.target.value)}
-                    className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-1 text-[0.78rem] font-medium text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
-                  >
-                    <option value="all">All projects ({data.voiceInboxItems.length})</option>
-                    {projectsInInbox.map((p) => (
-                      <option key={p} value={p}>
-                        {p || "(untagged)"}
-                      </option>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowFilters((v) => !v)}
+                  aria-expanded={showFilters}
+                  className="text-[0.78rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
+                >
+                  {showFilters ? "Hide filters" : "Filter"}
+                  {!showFilters && (priority !== "all" || project !== "all") && (
+                    <span className="ml-1 text-[var(--accent)]">·</span>
+                  )}
+                </button>
+                <span className="hidden text-[0.72rem] text-[var(--ink-faint)] sm:inline">
+                  {showKeyHints
+                    ? "j/k move · f accept · g keep · x dismiss · u undo · esc clear"
+                    : "? for keyboard shortcuts"}
+                </span>
+              </div>
+              {showFilters && (
+                <>
+                  <FilterRow label="Priority">
+                    <Chip active={priority === "all"} onClick={() => setPriority("all")}>
+                      All
+                    </Chip>
+                    {(["high", "medium", "low"] as Priority[]).map((p) => (
+                      <Chip key={p} active={priority === p} onClick={() => setPriority(p)}>
+                        {p}
+                      </Chip>
                     ))}
-                  </select>
-                </FilterRow>
+                  </FilterRow>
+                  {projectsInInbox.length > 1 && (
+                    <FilterRow label="Project">
+                      <select
+                        value={project}
+                        onChange={(e) => setProject(e.target.value)}
+                        className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-1 text-[0.78rem] font-medium text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
+                      >
+                        <option value="all">All projects ({data.voiceInboxItems.length})</option>
+                        {projectsInInbox.map((p) => (
+                          <option key={p} value={p}>
+                            {p || "(untagged)"}
+                          </option>
+                        ))}
+                      </select>
+                    </FilterRow>
+                  )}
+                </>
               )}
             </div>
 
@@ -146,7 +252,13 @@ export function DashboardClient({ data }: { data: DashboardData }) {
             ) : (
               <ul className="mt-1">
                 {pending.map((item) => (
-                  <CaptureCard key={item.id} item={item} />
+                  <CaptureCard
+                    key={item.id}
+                    item={item}
+                    projectNames={projectNames}
+                    focused={focusedId === item.id}
+                    registerHandle={registerHandle}
+                  />
                 ))}
               </ul>
             )}

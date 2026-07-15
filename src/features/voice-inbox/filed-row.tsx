@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { VoiceInboxItem, Priority } from "./types";
-import { PriorityDot } from "./capture-card";
+import { PriorityLabel } from "./capture-card";
 import { updatePriority, archiveCapture, unarchiveCapture } from "./actions";
 
 export function FiledRow({ item }: { item: VoiceInboxItem }) {
@@ -61,18 +61,10 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
 
   return (
     <li className="group flex items-start gap-2.5 border-t border-[var(--line-soft)] py-3 first:border-t-0">
-      <PriorityDot priority={priority} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
-          {priority !== "low" && (
-            <span
-              className="shrink-0 text-[0.7rem] font-medium capitalize"
-              style={{ color: priority === "high" ? "var(--clay)" : "var(--amber)" }}
-            >
-              {priority}
-            </span>
-          )}
+          {priority !== "low" && <PriorityLabel priority={priority} />}
         </div>
         <p className="mt-0.5 line-clamp-3 text-[0.82rem] text-[var(--ink-soft)]">{item.summary}</p>
 
