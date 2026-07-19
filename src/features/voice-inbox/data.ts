@@ -97,7 +97,9 @@ function toStringArray(value: unknown): string[] {
 }
 
 function normalizePriority(value: string | null): Priority {
-  if (value === "high" || value === "medium" || value === "low") return value;
+  if (value === "critical" || value === "high" || value === "medium" || value === "low") {
+    return value;
+  }
   return "medium";
 }
 

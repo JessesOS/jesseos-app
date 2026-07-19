@@ -2,6 +2,7 @@ import type { ReviewStatus } from "@/features/review-queue/types";
 import type { Priority } from "@/features/voice-inbox/types";
 
 const priorityStyles: Record<Priority, string> = {
+  critical: "border-red-300 bg-red-50 text-red-800",
   high: "border-rose-200 bg-rose-50 text-rose-700",
   medium: "border-amber-200 bg-amber-50 text-amber-700",
   low: "border-slate-200 bg-slate-50 text-slate-600",

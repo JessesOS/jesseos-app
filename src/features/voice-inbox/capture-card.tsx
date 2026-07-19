@@ -186,7 +186,11 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   }
 
   return (
-    <li ref={liRef} className={`border-t border-[var(--line-soft)] py-5 first:border-t-0 ${focusRing}`}>
+    <li
+      ref={liRef}
+      className={`border-t border-[var(--line-soft)] py-5 first:border-t-0 ${focusRing}`}
+      style={criticalEdge(priority)}
+    >
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
           <h3 className="text-[1.02rem] font-medium leading-snug text-[var(--ink)]">
@@ -325,6 +329,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
               disabled={pending}
               className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-2.5 py-1.5 text-[0.78rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
             >
+              <option value="critical">Critical</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
@@ -377,16 +382,30 @@ function ActionButton({
   );
 }
 
+/** Red left edge that makes critical items pop when scanning a list. */
+export function criticalEdge(priority: Priority): React.CSSProperties | undefined {
+  return priority === "critical"
+    ? { borderLeft: "2px solid var(--critical)", paddingLeft: "0.75rem" }
+    : undefined;
+}
+
 /** Text priority label — unmistakable, matches the Filed view's pattern. */
 export function PriorityLabel({ priority }: { priority: Priority }) {
   const color =
-    priority === "high"
-      ? "var(--clay)"
-      : priority === "medium"
-        ? "var(--amber)"
-        : "var(--ink-faint)";
+    priority === "critical"
+      ? "var(--critical)"
+      : priority === "high"
+        ? "var(--clay)"
+        : priority === "medium"
+          ? "var(--amber)"
+          : "var(--ink-faint)";
   return (
-    <span className="shrink-0 text-[0.72rem] font-medium capitalize" style={{ color }}>
+    <span
+      className={`shrink-0 text-[0.72rem] capitalize ${
+        priority === "critical" ? "font-semibold" : "font-medium"
+      }`}
+      style={{ color }}
+    >
       {priority}
     </span>
   );

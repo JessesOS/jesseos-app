@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { VoiceInboxItem, Priority } from "./types";
-import { PriorityLabel } from "./capture-card";
+import { PriorityLabel, criticalEdge } from "./capture-card";
 import { updatePriority, archiveCapture, unarchiveCapture } from "./actions";
 
 export function FiledRow({ item }: { item: VoiceInboxItem }) {
@@ -60,7 +60,10 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
   }
 
   return (
-    <li className="group flex items-start gap-2.5 border-t border-[var(--line-soft)] py-3 first:border-t-0">
+    <li
+      className="group flex items-start gap-2.5 border-t border-[var(--line-soft)] py-3 first:border-t-0"
+      style={criticalEdge(priority)}
+    >
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
@@ -103,6 +106,7 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
             disabled={pending}
             className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-2 py-0.5 text-[0.72rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
           >
+            <option value="critical">Critical</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
             <option value="low">Low</option>

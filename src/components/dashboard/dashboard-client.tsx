@@ -1,15 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { DashboardData } from "@/lib/dashboard-data";
 import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
 import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capture-card";
 import { FiledRow } from "@/features/voice-inbox/filed-row";
+import { DenseView } from "@/features/voice-inbox/dense-view";
 
 type View = "review" | "filed" | "knowledge";
 
-const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
+const DETAIL_STORAGE_KEY = "jesseos-detail-view";
+
+export const PRIORITY_RANK: Record<Priority, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
 
 export function DashboardClient({ data }: { data: DashboardData }) {
   const [view, setView] = useState<View>("review");
@@ -18,6 +27,19 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   const [showFilters, setShowFilters] = useState(data.counts.pendingReview > 15);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [showKeyHints, setShowKeyHints] = useState(false);
+  const [detail, setDetail] = useState(false);
+  const router = useRouter();
+
+  // Detail mode persists across visits; read after mount so SSR markup stays stable.
+  useEffect(() => {
+    setDetail(localStorage.getItem(DETAIL_STORAGE_KEY) === "1");
+  }, []);
+  const toggleDetail = () => {
+    setDetail((v) => {
+      localStorage.setItem(DETAIL_STORAGE_KEY, v ? "0" : "1");
+      return !v;
+    });
+  };
 
   const projectNames = useMemo(() => data.projects.map((p) => p.name), [data.projects]);
 
@@ -50,7 +72,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   });
 
   useEffect(() => {
-    if (view !== "review") return;
+    if (!detail && view !== "review") return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -112,7 +134,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [view]);
+  }, [view, detail]);
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
@@ -173,74 +195,138 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           </p>
         )}
 
-        {/* view switcher */}
-        <nav className="mt-12 flex gap-6 border-b border-[var(--line)]">
-          <Tab active={view === "review"} onClick={() => setView("review")}>
-            To review <Count>{data.counts.pendingReview}</Count>
-          </Tab>
-          <Tab active={view === "filed"} onClick={() => setView("filed")}>
-            Filed <Count>{data.counts.filed}</Count>
-          </Tab>
-          <Tab active={view === "knowledge"} onClick={() => setView("knowledge")}>
-            Knowledge <Count>{data.counts.knowledge}</Count>
-          </Tab>
-        </nav>
+        {/* view switcher + detail toggle */}
+        <div className="mt-12 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-[var(--line)]">
+          {detail ? (
+            <div className="flex gap-5 pb-3 text-[0.85rem] font-medium">
+              <a href="#dense-review" className="text-[var(--ink-soft)] hover:text-[var(--ink)]">
+                To review <Count>{data.counts.pendingReview}</Count>
+              </a>
+              <a href="#dense-filed" className="text-[var(--ink-soft)] hover:text-[var(--ink)]">
+                Filed <Count>{data.counts.filed}</Count>
+              </a>
+              <a href="#dense-knowledge" className="text-[var(--ink-soft)] hover:text-[var(--ink)]">
+                Knowledge <Count>{data.counts.knowledge}</Count>
+              </a>
+            </div>
+          ) : (
+            <nav className="flex gap-6">
+              <Tab active={view === "review"} onClick={() => setView("review")}>
+                To review <Count>{data.counts.pendingReview}</Count>
+              </Tab>
+              <Tab active={view === "filed"} onClick={() => setView("filed")}>
+                Filed <Count>{data.counts.filed}</Count>
+              </Tab>
+              <Tab active={view === "knowledge"} onClick={() => setView("knowledge")}>
+                Knowledge <Count>{data.counts.knowledge}</Count>
+              </Tab>
+            </nav>
+          )}
+          <div className="flex items-center gap-3 pb-3">
+            {detail && (
+              <button
+                type="button"
+                onClick={() => router.refresh()}
+                className="text-[0.75rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
+              >
+                Refresh
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={toggleDetail}
+              aria-pressed={detail}
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.75rem] font-medium transition-colors ${
+                detail
+                  ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
+                  : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]"
+              }`}
+            >
+              <span
+                className={`size-1.5 rounded-full ${
+                  detail ? "bg-[var(--paper)]" : "bg-[var(--ink-faint)]"
+                }`}
+              />
+              Detail
+            </button>
+          </div>
+        </div>
+
+        {/* filters — shown for the review list in both modes */}
+        {(detail || view === "review") && (
+          <div className="mt-7 flex flex-col gap-3 border-b border-[var(--line-soft)] pb-4">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                aria-expanded={showFilters}
+                className="text-[0.78rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
+              >
+                {showFilters ? "Hide filters" : "Filter"}
+                {!showFilters && (priority !== "all" || project !== "all") && (
+                  <span className="ml-1 text-[var(--accent)]">·</span>
+                )}
+              </button>
+              <span className="hidden text-[0.72rem] text-[var(--ink-faint)] sm:inline">
+                {showKeyHints
+                  ? "j/k move · f accept · g keep · x dismiss · u undo · esc clear"
+                  : "? for keyboard shortcuts"}
+              </span>
+            </div>
+            {showFilters && (
+              <>
+                <FilterRow label="Priority">
+                  <Chip active={priority === "all"} onClick={() => setPriority("all")}>
+                    All
+                  </Chip>
+                  {(["critical", "high", "medium", "low"] as Priority[]).map((p) => (
+                    <Chip
+                      key={p}
+                      active={priority === p}
+                      critical={p === "critical"}
+                      onClick={() => setPriority(p)}
+                    >
+                      {p}
+                    </Chip>
+                  ))}
+                </FilterRow>
+                {projectsInInbox.length > 1 && (
+                  <FilterRow label="Project">
+                    <select
+                      value={project}
+                      onChange={(e) => setProject(e.target.value)}
+                      className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-1 text-[0.78rem] font-medium text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
+                    >
+                      <option value="all">All projects ({data.voiceInboxItems.length})</option>
+                      {projectsInInbox.map((p) => (
+                        <option key={p} value={p}>
+                          {p || "(untagged)"}
+                        </option>
+                      ))}
+                    </select>
+                  </FilterRow>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* DETAIL — the whole system on one dense page */}
+        {detail && (
+          <DenseView
+            pending={pending}
+            filedByProject={filedByProject}
+            knowledgeItems={data.knowledgePacketItems}
+            projectNames={projectNames}
+            focusedId={focusedId}
+            registerHandle={registerHandle}
+            reviewError={data.sectionErrors.voiceInbox}
+          />
+        )}
 
         {/* REVIEW */}
-        {view === "review" && (
-          <section className="mt-7">
-            {/* filters — collapsed behind a toggle until the queue gets big */}
-            <div className="flex flex-col gap-3 border-b border-[var(--line-soft)] pb-4">
-              <div className="flex items-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowFilters((v) => !v)}
-                  aria-expanded={showFilters}
-                  className="text-[0.78rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
-                >
-                  {showFilters ? "Hide filters" : "Filter"}
-                  {!showFilters && (priority !== "all" || project !== "all") && (
-                    <span className="ml-1 text-[var(--accent)]">·</span>
-                  )}
-                </button>
-                <span className="hidden text-[0.72rem] text-[var(--ink-faint)] sm:inline">
-                  {showKeyHints
-                    ? "j/k move · f accept · g keep · x dismiss · u undo · esc clear"
-                    : "? for keyboard shortcuts"}
-                </span>
-              </div>
-              {showFilters && (
-                <>
-                  <FilterRow label="Priority">
-                    <Chip active={priority === "all"} onClick={() => setPriority("all")}>
-                      All
-                    </Chip>
-                    {(["high", "medium", "low"] as Priority[]).map((p) => (
-                      <Chip key={p} active={priority === p} onClick={() => setPriority(p)}>
-                        {p}
-                      </Chip>
-                    ))}
-                  </FilterRow>
-                  {projectsInInbox.length > 1 && (
-                    <FilterRow label="Project">
-                      <select
-                        value={project}
-                        onChange={(e) => setProject(e.target.value)}
-                        className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-1 text-[0.78rem] font-medium text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
-                      >
-                        <option value="all">All projects ({data.voiceInboxItems.length})</option>
-                        {projectsInInbox.map((p) => (
-                          <option key={p} value={p}>
-                            {p || "(untagged)"}
-                          </option>
-                        ))}
-                      </select>
-                    </FilterRow>
-                  )}
-                </>
-              )}
-            </div>
-
+        {!detail && view === "review" && (
+          <section className="mt-2">
             {data.sectionErrors.voiceInbox ? (
               <ErrorLine message={data.sectionErrors.voiceInbox} />
             ) : pending.length === 0 ? (
@@ -266,7 +352,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         )}
 
         {/* FILED */}
-        {view === "filed" && (
+        {!detail && view === "filed" && (
           <section className="mt-7">
             {data.filedItems.length === 0 ? (
               <EmptyLine>Nothing filed yet. File a capture and it lands here.</EmptyLine>
@@ -291,7 +377,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         )}
 
         {/* KNOWLEDGE */}
-        {view === "knowledge" && (
+        {!detail && view === "knowledge" && (
           <section className="mt-7">
             {data.knowledgePacketItems.length === 0 ? (
               <EmptyLine>No knowledge kept yet.</EmptyLine>
@@ -368,21 +454,27 @@ function FilterRow({ label, children }: { label: string; children: React.ReactNo
 
 function Chip({
   active,
+  critical,
   onClick,
   children,
 }: {
   active: boolean;
+  critical?: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
+  const activeStyle = critical
+    ? "bg-[var(--critical)] text-white"
+    : "bg-[var(--ink)] text-[var(--paper)]";
+  const idleStyle = critical
+    ? "border border-[var(--line)] text-[var(--critical)] hover:border-[var(--critical)]"
+    : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]";
   return (
     <button
       type="button"
       onClick={onClick}
       className={`rounded-full px-3 py-1 text-[0.78rem] font-medium capitalize transition-colors ${
-        active
-          ? "bg-[var(--ink)] text-[var(--paper)]"
-          : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]"
+        active ? activeStyle : idleStyle
       }`}
     >
       {children}

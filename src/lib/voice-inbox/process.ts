@@ -22,6 +22,8 @@ import type { Project } from "@/features/projects/types";
 const KINDS = ["task", "idea", "decision", "reference", "person-note"] as const;
 const SUGGESTED_ACTIONS = ["file", "keep_as_knowledge", "dismiss"] as const;
 
+// Note: "critical" priority exists in the UI but is deliberately absent here —
+// it is human-assigned only, so the AI can never dilute it.
 type StructuredCapture = {
   title: string;
   summary: string;

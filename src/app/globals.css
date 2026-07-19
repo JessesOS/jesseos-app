@@ -11,6 +11,7 @@
   --line-soft: #f0ede6;
   --accent: #4f6f5e; /* muted sage */
   --accent-soft: #eef2ef;
+  --critical: #9e2b25; /* critical priority — deep red, human-assigned only */
   --clay: #b4593f; /* high priority, gentle */
   --amber: #b08033; /* medium priority */
 

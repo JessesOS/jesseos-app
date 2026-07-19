@@ -1,4 +1,6 @@
-export type Priority = "high" | "medium" | "low";
+// "critical" is human-assigned only — the AI structuring step never proposes it
+// (see process.ts), so it stays a deliberate daily-curation act.
+export type Priority = "critical" | "high" | "medium" | "low";
 
 export type CaptureKind = "task" | "idea" | "decision" | "reference" | "person-note";
 
