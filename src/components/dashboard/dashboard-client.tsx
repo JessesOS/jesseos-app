@@ -7,7 +7,7 @@ import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
 import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capture-card";
 import { FiledRow } from "@/features/voice-inbox/filed-row";
-import { DenseView } from "@/features/voice-inbox/dense-view";
+import { OverviewBoard } from "@/features/voice-inbox/overview-board";
 
 type View = "review" | "filed" | "knowledge";
 
@@ -136,10 +136,32 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [view, detail]);
 
+  // Detail ON: the calm inbox steps aside entirely — full-width overview board.
+  if (detail) {
+    return (
+      <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
+        <OverviewBoard
+          projects={data.projects}
+          pending={pending}
+          filedItems={data.filedItems}
+          knowledgeItems={data.knowledgePacketItems}
+          counts={data.counts}
+          projectNames={projectNames}
+          priorityFilter={priority}
+          onPriorityFilter={setPriority}
+          focusedId={focusedId}
+          registerHandle={registerHandle}
+          onRefresh={() => router.refresh()}
+          onExit={toggleDetail}
+        />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <div className="mx-auto w-full max-w-[48rem] px-6 py-14 sm:py-20">
-        {/* wordmark */}
+        {/* wordmark + detail toggle */}
         <div className="flex items-center gap-2.5">
           <span className="grid size-7 place-items-center rounded-md bg-[var(--ink)] text-[0.7rem] font-semibold tracking-tight text-[var(--paper)]">
             JO
@@ -147,6 +169,15 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           <span className="text-[0.78rem] font-medium uppercase tracking-[0.16em] text-[var(--ink-faint)]">
             JesseOS
           </span>
+          <button
+            type="button"
+            onClick={toggleDetail}
+            aria-pressed={false}
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-[var(--line)] px-2.5 py-1 text-[0.75rem] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink-soft)]"
+          >
+            <span className="size-1.5 rounded-full bg-[var(--ink-faint)]" />
+            Detail
+          </button>
         </div>
 
         {/* hero */}
@@ -195,65 +226,21 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           </p>
         )}
 
-        {/* view switcher + detail toggle */}
-        <div className="mt-12 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-[var(--line)]">
-          {detail ? (
-            <div className="flex gap-5 pb-3 text-[0.85rem] font-medium">
-              <a href="#dense-review" className="text-[var(--ink-soft)] hover:text-[var(--ink)]">
-                To review <Count>{data.counts.pendingReview}</Count>
-              </a>
-              <a href="#dense-filed" className="text-[var(--ink-soft)] hover:text-[var(--ink)]">
-                Filed <Count>{data.counts.filed}</Count>
-              </a>
-              <a href="#dense-knowledge" className="text-[var(--ink-soft)] hover:text-[var(--ink)]">
-                Knowledge <Count>{data.counts.knowledge}</Count>
-              </a>
-            </div>
-          ) : (
-            <nav className="flex gap-6">
-              <Tab active={view === "review"} onClick={() => setView("review")}>
-                To review <Count>{data.counts.pendingReview}</Count>
-              </Tab>
-              <Tab active={view === "filed"} onClick={() => setView("filed")}>
-                Filed <Count>{data.counts.filed}</Count>
-              </Tab>
-              <Tab active={view === "knowledge"} onClick={() => setView("knowledge")}>
-                Knowledge <Count>{data.counts.knowledge}</Count>
-              </Tab>
-            </nav>
-          )}
-          <div className="flex items-center gap-3 pb-3">
-            {detail && (
-              <button
-                type="button"
-                onClick={() => router.refresh()}
-                className="text-[0.75rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
-              >
-                Refresh
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={toggleDetail}
-              aria-pressed={detail}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.75rem] font-medium transition-colors ${
-                detail
-                  ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]"
-                  : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]"
-              }`}
-            >
-              <span
-                className={`size-1.5 rounded-full ${
-                  detail ? "bg-[var(--paper)]" : "bg-[var(--ink-faint)]"
-                }`}
-              />
-              Detail
-            </button>
-          </div>
-        </div>
+        {/* view switcher */}
+        <nav className="mt-12 flex gap-6 border-b border-[var(--line)]">
+          <Tab active={view === "review"} onClick={() => setView("review")}>
+            To review <Count>{data.counts.pendingReview}</Count>
+          </Tab>
+          <Tab active={view === "filed"} onClick={() => setView("filed")}>
+            Filed <Count>{data.counts.filed}</Count>
+          </Tab>
+          <Tab active={view === "knowledge"} onClick={() => setView("knowledge")}>
+            Knowledge <Count>{data.counts.knowledge}</Count>
+          </Tab>
+        </nav>
 
-        {/* filters — shown for the review list in both modes */}
-        {(detail || view === "review") && (
+        {/* filters */}
+        {view === "review" && (
           <div className="mt-7 flex flex-col gap-3 border-b border-[var(--line-soft)] pb-4">
             <div className="flex items-center gap-4">
               <button
@@ -311,21 +298,8 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           </div>
         )}
 
-        {/* DETAIL — the whole system on one dense page */}
-        {detail && (
-          <DenseView
-            pending={pending}
-            filedByProject={filedByProject}
-            knowledgeItems={data.knowledgePacketItems}
-            projectNames={projectNames}
-            focusedId={focusedId}
-            registerHandle={registerHandle}
-            reviewError={data.sectionErrors.voiceInbox}
-          />
-        )}
-
         {/* REVIEW */}
-        {!detail && view === "review" && (
+        {view === "review" && (
           <section className="mt-2">
             {data.sectionErrors.voiceInbox ? (
               <ErrorLine message={data.sectionErrors.voiceInbox} />
@@ -352,7 +326,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         )}
 
         {/* FILED */}
-        {!detail && view === "filed" && (
+        {view === "filed" && (
           <section className="mt-7">
             {data.filedItems.length === 0 ? (
               <EmptyLine>Nothing filed yet. File a capture and it lands here.</EmptyLine>
@@ -377,7 +351,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         )}
 
         {/* KNOWLEDGE */}
-        {!detail && view === "knowledge" && (
+        {view === "knowledge" && (
           <section className="mt-7">
             {data.knowledgePacketItems.length === 0 ? (
               <EmptyLine>No knowledge kept yet.</EmptyLine>
