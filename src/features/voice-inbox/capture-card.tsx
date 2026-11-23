@@ -10,6 +10,7 @@ import {
   undoReview,
   getAudioUrl,
 } from "./actions";
+import { projectColor } from "@/features/projects/colors";
 
 /** Imperative surface for keyboard shortcuts (see dashboard-client.tsx). */
 export type CaptureCardHandle = {
@@ -76,7 +77,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
       ? "Keep as knowledge"
       : item.suggestedAction === "dismiss"
         ? "Dismiss"
-        : `File → ${bucket}`;
+        : `File to ${bucket}`;
 
   const handleUndo = () => {
     setError(null);
@@ -126,8 +127,9 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   }, [focused]);
 
   const focusRing = focused
-    ? "-mx-3 rounded-xl bg-[var(--accent-soft)]/70 px-3 ring-1 ring-[var(--accent)]/30"
+    ? "rounded-lg bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30"
     : "";
+  const node = <GraphNode color={projectColor(bucket)} critical={priority === "critical"} />;
 
   // Once acted on, collapse into a quiet confirmation line (revalidation will
   // drop it from the list on the next load; this gives instant feedback).
@@ -137,10 +139,11 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
     return (
       <li
         ref={liRef}
-        className={`flex items-center gap-3 border-t border-[var(--line-soft)] py-4 first:border-t-0 ${focusRing}`}
+        className={`relative flex items-center gap-3 border-t border-[var(--line-soft)] py-4 pl-9 first:border-t-0 ${focusRing}`}
       >
+        {node}
         <p className="min-w-0 flex-1 truncate text-[0.9rem] text-[var(--ink-faint)]">
-          <span className="text-[var(--accent)]">✓</span> {label} — {item.title}
+          <span className="text-[var(--accent)]">✓</span> {label}: {item.title}
         </p>
         <button
           type="button"
@@ -160,8 +163,9 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
     return (
       <li
         ref={liRef}
-        className={`flex items-center gap-3 border-t border-[var(--line-soft)] py-3.5 first:border-t-0 ${focusRing}`}
+        className={`relative flex items-center gap-3 border-t border-[var(--line-soft)] py-3.5 pl-9 first:border-t-0 ${focusRing}`}
       >
+        <GraphNode color="#4a4d55" />
         <p className="min-w-0 flex-1 truncate text-[0.88rem] text-[var(--ink-faint)]">
           {item.title}
           <span className="ml-2 text-[0.76rem]">· nothing usable detected</span>
@@ -188,22 +192,19 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   return (
     <li
       ref={liRef}
-      className={`border-t border-[var(--line-soft)] py-5 first:border-t-0 ${focusRing}`}
-      style={criticalEdge(priority)}
+      className={`relative border-t border-[var(--line-soft)] py-6 pl-9 first:border-t-0 ${focusRing}`}
     >
+      {node}
       <div className="min-w-0">
-        <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-          <h3 className="text-[1.02rem] font-medium leading-snug text-[var(--ink)]">
-            {item.title}
-          </h3>
+        <h3 className="text-[1.06rem] font-medium leading-snug text-[var(--ink)]">
+          {item.title}
+        </h3>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[0.78rem]">
           <PriorityLabel priority={priority} />
-          {item.kind && (
-            <span className="text-[0.72rem] font-medium uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              {item.kind}
-            </span>
-          )}
+          {item.kind && <span className="text-[var(--ink-faint)]">{item.kind}</span>}
+          <span style={{ color: projectColor(bucket) }}>{bucket}</span>
         </div>
-        <p className="mt-1 text-[0.92rem] leading-relaxed text-[var(--ink-soft)]">
+        <p className="mt-2.5 max-w-[62ch] text-[0.94rem] leading-relaxed text-[var(--ink-soft)]">
           {item.summary}
         </p>
 
@@ -215,11 +216,11 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
         )}
 
         {(item.people.length > 0 || item.tags.length > 0) && (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {item.people.map((person) => (
               <span
                 key={`p-${person}`}
-                className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[0.72rem] font-medium text-[var(--accent)]"
+                className="rounded-md bg-[var(--accent-soft)] px-2 py-0.5 text-[0.72rem] font-medium text-[var(--accent)]"
               >
                 {person}
               </span>
@@ -227,7 +228,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
             {item.tags.map((tag) => (
               <span
                 key={`t-${tag}`}
-                className="rounded-full border border-[var(--line-soft)] px-2 py-0.5 text-[0.72rem] text-[var(--ink-faint)]"
+                className="rounded-md border border-[var(--line)] px-2 py-0.5 text-[0.72rem] text-[var(--ink-faint)]"
               >
                 {tag}
               </span>
@@ -369,9 +370,9 @@ function ActionButton({
   subtle?: boolean;
 }) {
   const base =
-    "rounded-full px-3.5 py-1.5 text-[0.78rem] font-medium transition-colors disabled:opacity-50";
+    "rounded-md px-3.5 py-1.5 text-[0.8rem] font-medium transition-colors disabled:opacity-50";
   const style = primary
-    ? "bg-[var(--accent)] text-white hover:opacity-90"
+    ? "border border-[var(--btn-line)] bg-[var(--btn)] text-[var(--ink)] hover:border-[var(--accent)]"
     : subtle
       ? "text-[var(--ink-faint)] hover:text-[var(--clay)]"
       : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--accent)] hover:text-[var(--accent)]";
@@ -382,11 +383,36 @@ function ActionButton({
   );
 }
 
-/** Red left edge that makes critical items pop when scanning a list. */
-export function criticalEdge(priority: Priority): React.CSSProperties | undefined {
-  return priority === "critical"
-    ? { borderLeft: "2px solid var(--critical)", paddingLeft: "0.75rem" }
-    : undefined;
+/**
+ * The Graph night marker: a thin vertical line with a dot in the project's
+ * colour. Critical items get a red ring round the dot.
+ * Needs a `relative` parent with left padding (pl-9).
+ */
+export function GraphNode({
+  color,
+  critical,
+  top = "1.85rem",
+}: {
+  color: string;
+  critical?: boolean;
+  top?: string;
+}) {
+  return (
+    <>
+      <span aria-hidden className="absolute inset-y-0 left-[9px] w-px bg-[var(--edge)]" />
+      <span
+        aria-hidden
+        className="absolute left-[4px] size-[11px] rounded-full"
+        style={{
+          top,
+          background: color,
+          boxShadow: critical
+            ? `0 0 0 2px var(--paper), 0 0 0 3.5px var(--critical), 0 0 14px ${color}`
+            : `0 0 0 4px var(--paper), 0 0 14px ${color}`,
+        }}
+      />
+    </>
+  );
 }
 
 /** Text priority label — unmistakable, matches the Filed view's pattern. */

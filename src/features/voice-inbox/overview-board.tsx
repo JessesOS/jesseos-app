@@ -125,7 +125,7 @@ export function OverviewBoard({
               className={`rounded-full px-2 py-0.5 text-[0.68rem] font-medium capitalize transition-colors ${
                 priorityFilter === p
                   ? p === "critical"
-                    ? "bg-[var(--critical)] text-white"
+                    ? "bg-[var(--critical)] text-[var(--paper)]"
                     : "bg-[var(--ink)] text-[var(--paper)]"
                   : p === "critical"
                     ? "text-[var(--critical)] hover:bg-[var(--paper-raised)]"
@@ -163,8 +163,8 @@ export function OverviewBoard({
       {/* critical strip — only exists when something is critical */}
       {criticalItems.length > 0 && (
         <div
-          className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#ecd4d1] px-5 py-1.5"
-          style={{ background: "#fbf0ef" }}
+          className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-[rgba(255,138,122,0.25)] px-5 py-1.5"
+          style={{ background: "rgba(255,138,122,0.07)" }}
         >
           <span className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--critical)]">
             Critical {criticalItems.length}
@@ -589,7 +589,7 @@ function BoardCard({
                   type="button"
                   disabled={pending}
                   onClick={doPrimary}
-                  className="rounded bg-[var(--accent)] px-2 py-0.5 text-[0.7rem] font-medium text-white hover:opacity-90 disabled:opacity-50"
+                  className="rounded bg-[var(--accent)] px-2 py-0.5 text-[0.7rem] font-medium text-[var(--paper)] hover:opacity-90 disabled:opacity-50"
                 >
                   {item.suggestedAction === "keep_as_knowledge"
                     ? "Keep"

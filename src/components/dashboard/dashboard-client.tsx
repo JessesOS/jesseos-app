@@ -8,6 +8,8 @@ import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
 import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capture-card";
 import { FiledRow } from "@/features/voice-inbox/filed-row";
 import { OverviewBoard } from "@/features/voice-inbox/overview-board";
+import { ProjectGraph } from "@/features/voice-inbox/project-graph";
+import { projectColor } from "@/features/projects/colors";
 
 type View = "review" | "filed" | "knowledge";
 
@@ -158,60 +160,62 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     );
   }
 
+  const criticalCount = data.voiceInboxItems.filter((i) => i.priority === "critical").length;
+  const newest = data.voiceInboxItems[0]?.createdAt;
+
   return (
-    <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
-      <div className="mx-auto w-full max-w-[48rem] px-6 py-14 sm:py-20">
+    <main className="relative min-h-screen overflow-x-hidden bg-[var(--paper)] text-[var(--ink)]">
+      <ProjectGraph pending={data.voiceInboxItems} filed={data.filedItems} />
+      <div className="relative mx-auto w-full max-w-[50rem] px-5 py-10 sm:px-6 sm:py-12">
         {/* wordmark + detail toggle */}
         <div className="flex items-center gap-2.5">
-          <span className="grid size-7 place-items-center rounded-md bg-[var(--ink)] text-[0.7rem] font-semibold tracking-tight text-[var(--paper)]">
-            JO
-          </span>
-          <span className="text-[0.78rem] font-medium uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+          <span className="text-[0.92rem] font-semibold tracking-[-0.01em] text-[var(--ink)]">
             JesseOS
           </span>
           <button
             type="button"
             onClick={toggleDetail}
             aria-pressed={false}
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-[var(--line)] px-2.5 py-1 text-[0.75rem] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink-soft)]"
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--paper)]/80 px-3 py-1.5 text-[0.78rem] font-medium text-[var(--ink-soft)] backdrop-blur transition-colors hover:border-[var(--ink-soft)]"
           >
             <span className="size-1.5 rounded-full bg-[var(--ink-faint)]" />
             Detail
           </button>
         </div>
 
-        {/* hero */}
-        <header className="mt-12">
-          <p className="text-[0.82rem] font-medium uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-            Inbox
-          </p>
-          <h1 className="mt-4 text-[2.4rem] font-semibold leading-[1.12] tracking-[-0.02em] text-[var(--ink)] sm:text-[2.9rem]">
-            {data.counts.pendingReview > 0 ? (
-              <>
-                {data.counts.pendingReview}{" "}
-                {data.counts.pendingReview === 1 ? "thing is" : "things are"}
-                <br />
-                waiting for you.
-              </>
-            ) : (
-              <>You&rsquo;re all caught up.</>
-            )}
-          </h1>
-          <p className="mt-5 max-w-md text-[1.02rem] leading-relaxed text-[var(--ink-soft)]">
-            Everything you capture lands here first — deciphered and sorted, ready for
-            a quick decision before it goes into a project.
-          </p>
+        {/* hero: the count is the headline */}
+        <header className="mt-12 flex items-end gap-5 sm:mt-16 sm:gap-7">
+          {data.counts.pendingReview > 0 ? (
+            <>
+              <span className="text-[4.5rem] font-medium leading-[0.85] tracking-[-0.04em] tabular-nums text-[var(--ink)] sm:text-[5.75rem]">
+                {data.counts.pendingReview}
+              </span>
+              <div className="pb-1">
+                <h1 className="text-[1.2rem] font-normal leading-snug text-[var(--ink)] sm:text-[1.4rem]">
+                  {data.counts.pendingReview === 1 ? "capture waiting" : "captures waiting"} for you
+                </h1>
+                <p className="mt-1.5 text-[0.9rem] text-[var(--ink-faint)]">
+                  {newest ? `Newest ${newest}.` : null}
+                  {criticalCount > 0 ? ` ${criticalCount} marked critical.` : null}
+                </p>
+              </div>
+            </>
+          ) : (
+            <h1 className="text-[2rem] font-medium leading-tight tracking-[-0.02em] text-[var(--ink)]">
+              You&rsquo;re all caught up.
+            </h1>
+          )}
         </header>
 
         {/* quiet stats */}
-        <dl className="mt-11 flex flex-wrap gap-x-10 gap-y-4 border-y border-[var(--line)] py-6">
+        <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-3 py-1">
           {data.dashboardStats.map((stat) => (
             <div key={stat.label}>
-              <dt className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+              <dt className="text-[0.76rem] font-medium text-[var(--ink-faint)]">
                 {stat.label}
               </dt>
               <dd className="mt-1.5 flex items-baseline gap-2">
-                <span className="text-2xl font-semibold tabular-nums tracking-tight text-[var(--ink)]">
+                <span className="text-[1.15rem] font-medium tabular-nums text-[var(--ink-soft)]">
                   {stat.value}
                 </span>
                 <span className="text-[0.78rem] text-[var(--ink-soft)]">{stat.detail}</span>
@@ -227,7 +231,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         )}
 
         {/* view switcher */}
-        <nav className="mt-12 flex gap-6 border-b border-[var(--line)]">
+        <nav className="mt-10 flex gap-6 border-b border-[var(--line)]">
           <Tab active={view === "review"} onClick={() => setView("review")}>
             To review <Count>{data.counts.pendingReview}</Count>
           </Tab>
@@ -334,7 +338,10 @@ export function DashboardClient({ data }: { data: DashboardData }) {
               <div className="space-y-9">
                 {filedByProject.map(([bucket, items]) => (
                   <div key={bucket}>
-                    <h2 className="mb-2 flex items-baseline gap-2 text-[0.82rem] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+                    <h2
+                      className="mb-1 flex items-baseline gap-2 text-[0.95rem] font-medium"
+                      style={{ color: projectColor(bucket) }}
+                    >
                       {bucket}
                       <span className="text-[var(--ink-faint)]">{items.length}</span>
                     </h2>
@@ -402,7 +409,7 @@ function Tab({
       onClick={onClick}
       className={`-mb-px border-b-2 pb-3 text-[0.92rem] font-medium transition-colors ${
         active
-          ? "border-[var(--ink)] text-[var(--ink)]"
+          ? "border-[var(--accent)] text-[var(--ink)]"
           : "border-transparent text-[var(--ink-faint)] hover:text-[var(--ink-soft)]"
       }`}
     >
@@ -418,7 +425,7 @@ function Count({ children }: { children: React.ReactNode }) {
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 text-[0.72rem] font-medium uppercase tracking-[0.1em] text-[var(--ink-faint)]">
+      <span className="mr-1 text-[0.76rem] font-medium text-[var(--ink-faint)]">
         {label}
       </span>
       {children}
@@ -438,7 +445,7 @@ function Chip({
   children: React.ReactNode;
 }) {
   const activeStyle = critical
-    ? "bg-[var(--critical)] text-white"
+    ? "bg-[var(--critical)] text-[var(--paper)]"
     : "bg-[var(--ink)] text-[var(--paper)]";
   const idleStyle = critical
     ? "border border-[var(--line)] text-[var(--critical)] hover:border-[var(--critical)]"
@@ -469,7 +476,7 @@ function KnowledgeRow({ item }: { item: KnowledgePacketItem }) {
 
 function ErrorLine({ message }: { message: string }) {
   return (
-    <p className="mt-3 rounded-lg border border-[#e7d3cc] bg-[#fbf1ee] px-3.5 py-2.5 text-[0.85rem] text-[var(--clay)]">
+    <p className="mt-3 rounded-lg border border-[rgba(255,138,122,0.3)] bg-[rgba(255,138,122,0.07)] px-3.5 py-2.5 text-[0.85rem] text-[var(--clay)]">
       {message}
     </p>
   );

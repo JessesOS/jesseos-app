@@ -1,21 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  /* Warm paper palette — calm, not stark */
-  --paper: #f7f5f1;
-  --paper-raised: #fdfcfa;
-  --ink: #23201b;
-  --ink-soft: #6f6a61;
-  --ink-faint: #8a8275; /* darkened from #a49d92 (2.4:1 on paper) to ~3.4:1 — keeps the faint layer distinct from --ink-soft */
-  --line: #e9e5dd;
-  --line-soft: #f0ede6;
-  --accent: #4f6f5e; /* muted sage */
-  --accent-soft: #eef2ef;
-  --critical: #9e2b25; /* critical priority — deep red, human-assigned only */
-  --clay: #b4593f; /* high priority, gentle */
-  --amber: #b08033; /* medium priority */
+  /* Graph night: charcoal, quiet, like Obsidian's graph view */
+  --paper: #16171a;
+  --paper-raised: #1d1f23;
+  --ink: #e6e7ea;
+  --ink-soft: #b4b7bf;
+  --ink-faint: #868a93; /* ~5:1 on paper */
+  --line: #2a2c31;
+  --line-soft: #222428;
+  --accent: #a99bff; /* soft violet */
+  --accent-soft: rgba(169, 155, 255, 0.1);
+  --critical: #ff8a7a; /* critical priority, human-assigned only */
+  --clay: #f0a36f; /* high priority */
+  --amber: #d9b45f; /* medium priority */
+  --btn: #26282e;
+  --btn-line: #3a3d46;
+  --edge: #2b2e35; /* the thin line captures hang off */
 
-  --font-system-sans: Inter, ui-sans-serif, system-ui, -apple-system,
+  --font-system-sans: var(--font-instrument), ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -27,6 +30,7 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: dark;
 }
 
 body {
@@ -37,6 +41,6 @@ body {
 }
 
 ::selection {
-  background: #dfe7e2;
+  background: rgba(169, 155, 255, 0.3);
   color: var(--ink);
 }

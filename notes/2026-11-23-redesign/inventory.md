@@ -44,3 +44,9 @@ Mockups only, built from real capture titles. Open `mockups/looks.html?look=a` (
 
 Rules for the build, once Jesse picks: the address and routes stay the same (HQ may link here), the ingest route and
 data stay untouched, no schema change, no deploy without a yes.
+
+## Built (23 Nov 2026)
+
+Jesse picked **A. Graph night**. It's built on the branch `graph-night` (`shots/built-graph-night.png`).
+It's a restyle only: same page, same tabs, same buttons, same address. Nothing is cut yet.
+The live site stays on `main` until Jesse says to put it live.

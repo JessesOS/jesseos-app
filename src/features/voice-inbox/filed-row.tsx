@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import type { VoiceInboxItem, Priority } from "./types";
-import { PriorityLabel, criticalEdge } from "./capture-card";
+import { PriorityLabel, GraphNode } from "./capture-card";
+import { projectColor } from "@/features/projects/colors";
 import { updatePriority, archiveCapture, unarchiveCapture } from "./actions";
 
 export function FiledRow({ item }: { item: VoiceInboxItem }) {
@@ -43,7 +44,8 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
 
   if (archived) {
     return (
-      <li className="flex items-center gap-3 border-t border-[var(--line-soft)] py-3 first:border-t-0">
+      <li className="relative flex items-center gap-3 border-t border-[var(--line-soft)] py-3 pl-9 first:border-t-0">
+        <GraphNode color="#4a4d55" top="1.1rem" />
         <p className="min-w-0 flex-1 truncate text-[0.85rem] text-[var(--ink-faint)]">
           Archived — {item.title}
         </p>
@@ -61,9 +63,9 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
 
   return (
     <li
-      className="group flex items-start gap-2.5 border-t border-[var(--line-soft)] py-3 first:border-t-0"
-      style={criticalEdge(priority)}
+      className="group relative flex items-start gap-2.5 border-t border-[var(--line-soft)] py-4 pl-9 first:border-t-0"
     >
+      <GraphNode color={projectColor(item.projectBucket)} critical={priority === "critical"} top="1.45rem" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
@@ -104,7 +106,7 @@ export function FiledRow({ item }: { item: VoiceInboxItem }) {
             value={priority}
             onChange={(e) => handlePriorityChange(e.target.value as Priority)}
             disabled={pending}
-            className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-2 py-0.5 text-[0.72rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
+            className="rounded-md border border-[var(--line)] bg-[var(--paper-raised)] px-2 py-0.5 text-[0.72rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
           >
             <option value="critical">Critical</option>
             <option value="high">High</option>
