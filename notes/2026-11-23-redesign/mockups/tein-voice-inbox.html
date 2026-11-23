@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Inbox (Tein look mock)</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format('woff2');font-weight:100 900}
+@font-face{font-family:Mono;src:url(fonts/martian-mono.woff2) format('woff2')}
+:root{
+  --page:#F4F5F7; --card:#FFFFFF; --line:#E5E7EB; --line2:#EEF0F3;
+  --ink:#15171C; --ink2:#5B606B; --ink3:#8A8F99;
+  --dark:#15171C; --accent:#2B37D9; --accent-soft:#ECEEFF; --ok:#1F8A4C; --ok-soft:#E7F5EC;
+  --red:#C2412D; --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--page);color:var(--ink);font:15px/1.45 Archivo,system-ui,sans-serif}
+button{font:inherit;cursor:pointer}
+.mono{font-family:Mono,ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+
+.top{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;padding:0 28px;position:sticky;top:0;z-index:5}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.02em}
+.logo i{display:grid;grid-template-columns:repeat(3,6px);gap:2px}
+.logo i b{width:6px;height:6px;background:var(--ink)}
+.logo i b:nth-child(2),.logo i b:nth-child(6),.logo i b:nth-child(7){background:#C9CCD3}
+.top .sp{flex:1}
+.top a{color:var(--ink2);text-decoration:none;font-size:14.5px}
+.av{width:30px;height:30px;border-radius:50%;background:var(--page);border:1px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:600}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:500}
+.btn.dark{background:var(--dark);border-color:var(--dark);color:#fff;padding:10px 18px;font-size:14px}
+.btn.ghost{border-color:transparent;color:var(--ink2);background:transparent}
+
+.wrap{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 64px)}
+nav.side{padding:28px 16px;border-right:1px solid var(--line)}
+.grp{margin-bottom:26px}
+.grp .mono{color:var(--ink3);padding:0 12px 10px}
+.side a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14.5px}
+.side a:hover{background:#ECEEF1}
+.side a.on{background:#fff;box-shadow:0 0 0 1px var(--line)}
+.ic{width:18px;height:18px;display:grid;grid-template-columns:repeat(3,4px);gap:2px;align-content:center;opacity:.75}
+.ic b{width:4px;height:4px;background:var(--ink)}
+.ic b:nth-child(2n){opacity:.35}
+.side a .n{margin-left:auto;background:var(--accent);color:#fff;font-size:11px;border-radius:5px;padding:1px 6px}
+.side a .c{margin-left:auto;color:var(--ink3);font-size:12.5px}
+
+main{padding:24px 40px 80px;max-width:1180px}
+.crumb{font-size:13.5px;color:var(--ink3);padding-bottom:14px;border-bottom:1px solid var(--line);display:flex;gap:8px}
+.crumb b{color:var(--ink);font-weight:500}
+.crumb .sp{flex:1}
+
+.banner{margin:18px 0 26px;background:#ECEEF2;border-radius:var(--r);padding:18px 24px;display:flex;align-items:center;gap:18px}
+.banner .mono{color:var(--ink2)}
+.banner h3{font-size:18px;font-weight:500;letter-spacing:-.01em}
+.banner p{color:var(--ink2);font-size:14px;margin-top:2px}
+
+.head{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px}
+.head .mono{color:var(--ink3);margin-bottom:6px}
+.head h1{font-size:30px;font-weight:500;letter-spacing:-.02em}
+.head .sp{flex:1}
+.stats{display:flex;gap:8px;margin-top:10px}
+.pill{font-size:12.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;color:var(--ink2)}
+.pill.red{color:var(--red)}
+
+.strip{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.strip .steps{display:flex;gap:4px}
+.strip .steps i{width:18px;height:6px;border-radius:3px;background:var(--line)}
+.strip .steps i.d{background:var(--ok)}
+.strip .t{font-weight:500}
+.strip .g{color:var(--ink2)}
+.strip a{color:var(--accent);text-decoration:none}
+.strip .sp{flex:1}
+
+.tools{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13.5px;color:var(--ink2)}
+.chip b{font-weight:500;color:var(--ink3);margin-left:6px}
+.chip.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.chip.on b{color:#AEB2BA}
+.keys{margin-left:auto;color:var(--ink3);font-size:12.5px}
+.keys kbd{font-family:Mono,monospace;font-size:10.5px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:1px 5px;margin:0 2px}
+
+.sec{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:18px}
+.sec-h{display:flex;align-items:baseline;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line2)}
+.sec-h h2{font-size:16px;font-weight:600}
+.sec-h span{color:var(--ink3);font-size:13.5px}
+
+.row{display:grid;grid-template-columns:20px 1fr auto;gap:14px;align-items:start;padding:16px 20px;border-bottom:1px solid var(--line2)}
+.row:last-child{border-bottom:0}
+.row .play{width:20px;height:20px;margin-top:2px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center}
+.row .play::after{content:'';border-left:6px solid var(--ink2);border-top:4px solid transparent;border-bottom:4px solid transparent;margin-left:2px}
+.row h4{font-size:15px;font-weight:500;line-height:1.3}
+.meta{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 8px;color:var(--ink2);background:#fff}
+.tag.proj{background:var(--page);border-color:transparent;color:var(--ink)}
+.tag.crit{color:var(--red);border-color:#F2D3CD}
+.when{color:var(--ink3);font-size:12.5px;white-space:nowrap;margin-top:2px}
+.row.open{background:#FBFBFC}
+.row.open .when{display:none}
+.detail{margin-top:12px;color:var(--ink2);font-size:14px;max-width:720px}
+.next{margin-top:10px;font-size:14px}
+.next .mono{color:var(--ink3);margin-right:8px}
+.acts{display:flex;gap:8px;margin-top:14px;align-items:center}
+.acts .file{background:var(--accent);border-color:var(--accent);color:#fff}
+.acts .sp{flex:1}
+.acts a{color:var(--ink2);font-size:13.5px;text-decoration:none}
+
+.side-note{position:fixed;right:20px;bottom:20px;background:var(--dark);color:#fff;border-radius:10px;padding:12px 16px;font-size:13px;max-width:290px}
+.side-note .mono{color:#AEB2BA;display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo"><i><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i>JesseOS</div>
+  <div class="sp"></div>
+  <a href="#">HQ ↗</a>
+  <span class="av">J</span>
+</header>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="grp"><div class="mono">Voice inbox</div>
+      <a class="on" href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>To review<span class="n">25</span></a>
+      <a href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>Filed<span class="c">25</span></a>
+      <a href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>Board</a>
+    </div>
+    <div class="grp"><div class="mono">Projects</div>
+      <a href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>agencyos<span class="c">36</span></a>
+      <a href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>customerjourney<span class="c">7</span></a>
+      <a href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>personalos<span class="c">5</span></a>
+      <a href="#"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>Not placed<span class="c">3</span></a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="crumb">Voice inbox <span>/</span> <b>To review</b><span class="sp"></span><span>Last note 22 Nov</span></div>
+
+    <div class="banner">
+      <span class="mono">Voice inbox</span>
+      <div><h3>Talk into your phone. It lands here.</h3>
+      <p>Each note gets a title, a project and a next step. File it, or dismiss it.</p></div>
+    </div>
+
+    <div class="head">
+      <div>
+        <div class="mono">Jesse's notes</div>
+        <h1>To review</h1>
+        <div class="stats"><span class="pill">25 waiting</span><span class="pill">25 filed</span><span class="pill red">3 critical</span></div>
+      </div>
+      <div class="sp"></div>
+      <button class="btn ghost">Filters</button>
+      <button class="btn dark">Review next</button>
+    </div>
+
+    <div class="strip">
+      <span class="t">Today</span>
+      <span class="steps"><i class="d"></i><i class="d"></i><i></i><i></i><i></i></span>
+      <span class="g">2 of 5 cleared</span>
+      <span class="g">Next: <a href="#">Explain How AI Works Content Idea</a></span>
+      <span class="sp"></span>
+      <span class="g">Hide</span>
+    </div>
+
+    <div class="tools">
+      <button class="chip on">All<b>25</b></button>
+      <button class="chip">agencyos<b>17</b></button>
+      <button class="chip">customerjourney<b>5</b></button>
+      <button class="chip">personalos<b>1</b></button>
+      <button class="chip">Not placed<b>2</b></button>
+      <span class="keys"><kbd>J</kbd><kbd>K</kbd> move <kbd>F</kbd> file <kbd>X</kbd> dismiss</span>
+    </div>
+
+    <section class="sec">
+      <div class="sec-h"><h2>This week</h2><span>1 note</span></div>
+      <div class="row open">
+        <span class="play"></span>
+        <div>
+          <h4>Explain How AI Works Content Idea</h4>
+          <div class="meta"><span class="tag proj">agencyos</span><span class="tag">idea</span><span class="tag">low</span><span class="tag">Shervin</span><span class="when">22 Nov · 0:48</span></div>
+          <p class="detail">Content idea to explain AI basics (models, chips, networking) for a general audience, maybe by interviewing Shervin.</p>
+          <p class="next"><span class="mono">Next</span>Draft an outline and ask Shervin about an interview.</p>
+          <div class="acts">
+            <button class="btn file">File to agencyos</button>
+            <button class="btn">Change</button>
+            <button class="btn">Dismiss</button>
+            <span class="sp"></span>
+            <a href="#">Full text</a>
+          </div>
+        </div>
+        <span class="when">22 Nov</span>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><h2>Older</h2><span>24 notes</span></div>
+      <div class="row"><span class="play"></span><div><h4>Scale Dashboard Service Across Clients</h4><div class="meta"><span class="tag proj">agencyos</span><span class="tag">idea</span><span class="tag">medium</span></div></div><span class="when">9 Aug</span></div>
+      <div class="row"><span class="play"></span><div><h4>Cross-check Rich's Google Ads Claims</h4><div class="meta"><span class="tag proj">agencyos</span><span class="tag">task</span><span class="tag">medium</span><span class="tag">Rich</span></div></div><span class="when">1 Aug</span></div>
+      <div class="row"><span class="play"></span><div><h4>Add Client Service Costs to Dashboard</h4><div class="meta"><span class="tag proj">agencyos</span><span class="tag">task</span><span class="tag">medium</span></div></div><span class="when">31 Jul</span></div>
+      <div class="row"><span class="play"></span><div><h4>RT Digital: Return to First Principles</h4><div class="meta"><span class="tag proj">agencyos</span><span class="tag">idea</span><span class="tag">medium</span></div></div><span class="when">21 Jul</span></div>
+      <div class="row"><span class="play"></span><div><h4>Subscription Tracker with Renewal Reminders</h4><div class="meta"><span class="tag proj">personalos</span><span class="tag">idea</span><span class="tag">medium</span></div></div><span class="when">18 Jul</span></div>
+      <div class="row"><span class="play"></span><div><h4>Automate Milestone Notifications in Onboarding System</h4><div class="meta"><span class="tag proj">customerjourney</span><span class="tag">idea</span><span class="tag">medium</span><span class="tag">Louisa</span></div></div><span class="when">17 Jul</span></div>
+    </section>
+  </main>
+</div>
+
+<div class="side-note"><span class="mono">Mock only</span>Same buttons and data as the live app. Nothing is built yet.</div>
+</body>
+</html>

@@ -50,3 +50,11 @@ data stay untouched, no schema change, no deploy without a yes.
 Jesse picked **A. Graph night**. It's built on the branch `graph-night` (`shots/built-graph-night.png`).
 It's a restyle only: same page, same tabs, same buttons, same address. Nothing is cut yet.
 The live site stays on `main` until Jesse says to put it live.
+
+## Tein look (23 Nov 2026, later)
+
+Jesse switched to the Tein reference for this app. Mock: `mockups/tein-voice-inbox.html`, grab: `shots/tein-voice-inbox.png`.
+Light grey page, white cards, blue accent, Archivo, left menu in groups, one dark button ("Review next"). Not built yet.
+
+## Cuts done
+- 23 Nov: "Scale Dashboard Service Across Clients" dismissed (status change only, row kept). Test of the cut list.
