@@ -4,15 +4,15 @@
  * from the palette, picked from its name.
  */
 const FIXED: Record<string, string> = {
-  agencyos: "#a99bff", // violet
-  customerjourney: "#6cb8f0", // sky
-  content: "#6fd3a8", // mint
-  personalos: "#d9b45f", // gold
-  jesseos: "#f08aa8", // rose
-  unsorted: "#6b6f78", // grey: not placed yet
+  agencyos: "#5b4fd6", // violet
+  customerjourney: "#1f6fb8", // sky
+  content: "#1f8a5c", // mint
+  personalos: "#9a6f12", // gold
+  jesseos: "#b8406a", // rose
+  unsorted: "#8a8f99", // grey: not placed yet
 };
 
-const PALETTE = ["#a99bff", "#6fd3a8", "#6cb8f0", "#d9b45f", "#f08aa8", "#8fd0d9"];
+const PALETTE = ["#5b4fd6", "#1f8a5c", "#1f6fb8", "#9a6f12", "#b8406a", "#1d7f8c"];
 
 export function projectColor(name: string | null | undefined): string {
   const key = (name ?? "").trim().toLowerCase();

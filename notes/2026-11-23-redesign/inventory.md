@@ -58,3 +58,4 @@ Light grey page, white cards, blue accent, Archivo, left menu in groups, one dar
 
 ## Cuts done
 - 23 Nov: "Scale Dashboard Service Across Clients" dismissed (status change only, row kept). Test of the cut list.
+- 23 Nov: Tein look built on the branch `tein-look` (`shots/built-tein.png`). New frame: top bar, left menu (Voice inbox, Projects), breadcrumb, banner, title with count tags, "Review next" button. The graph art and the row of four totals are gone. Same address, same routes, same data. Live only after Jesse says yes.

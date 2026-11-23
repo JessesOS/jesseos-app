@@ -8,8 +8,6 @@ import type { KnowledgePacketItem } from "@/features/knowledge-packets/types";
 import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capture-card";
 import { FiledRow } from "@/features/voice-inbox/filed-row";
 import { OverviewBoard } from "@/features/voice-inbox/overview-board";
-import { ProjectGraph } from "@/features/voice-inbox/project-graph";
-import { projectColor } from "@/features/projects/colors";
 
 type View = "review" | "filed" | "knowledge";
 
@@ -162,221 +160,341 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
   const criticalCount = data.voiceInboxItems.filter((i) => i.priority === "critical").length;
   const newest = data.voiceInboxItems[0]?.createdAt;
+  const viewTitle = view === "review" ? "To review" : view === "filed" ? "Filed" : "Knowledge";
+  const projectCounts = countByProject([...data.voiceInboxItems, ...data.filedItems]);
+
+  const reviewNext = () => {
+    setView("review");
+    const first = pending[0];
+    if (!first) return;
+    setFocusedId(first.id); // the card scrolls itself into view when focused
+  };
+
+  const pickProject = (name: string) => {
+    setView("review");
+    setProject((current) => (current === name ? "all" : name));
+  };
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[var(--paper)] text-[var(--ink)]">
-      <ProjectGraph pending={data.voiceInboxItems} filed={data.filedItems} />
-      <div className="relative mx-auto w-full max-w-[50rem] px-5 py-10 sm:px-6 sm:py-12">
-        {/* wordmark + detail toggle */}
-        <div className="flex items-center gap-2.5">
-          <span className="text-[0.92rem] font-semibold tracking-[-0.01em] text-[var(--ink)]">
-            JesseOS
-          </span>
-          <button
-            type="button"
-            onClick={toggleDetail}
-            aria-pressed={false}
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--paper)]/80 px-3 py-1.5 text-[0.78rem] font-medium text-[var(--ink-soft)] backdrop-blur transition-colors hover:border-[var(--ink-soft)]"
-          >
-            <span className="size-1.5 rounded-full bg-[var(--ink-faint)]" />
-            Detail
-          </button>
-        </div>
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
+      {/* top bar */}
+      <header className="sticky top-0 z-10 flex h-16 items-center gap-5 border-b border-[var(--line)] bg-[var(--paper-raised)] px-5 sm:px-7">
+        <span className="flex items-center gap-2.5 text-[1.2rem] font-bold tracking-[-0.02em]">
+          <Logo />
+          JesseOS
+        </span>
+        <span className="flex-1" />
+        <span className="grid size-[30px] place-items-center rounded-full border border-[var(--line)] bg-[var(--paper)] text-[0.8rem] font-semibold">
+          J
+        </span>
+      </header>
 
-        {/* hero: the count is the headline */}
-        <header className="mt-12 flex items-end gap-5 sm:mt-16 sm:gap-7">
-          {data.counts.pendingReview > 0 ? (
-            <>
-              <span className="text-[4.5rem] font-medium leading-[0.85] tracking-[-0.04em] tabular-nums text-[var(--ink)] sm:text-[5.75rem]">
-                {data.counts.pendingReview}
-              </span>
-              <div className="pb-1">
-                <h1 className="text-[1.2rem] font-normal leading-snug text-[var(--ink)] sm:text-[1.4rem]">
-                  {data.counts.pendingReview === 1 ? "capture waiting" : "captures waiting"} for you
-                </h1>
-                <p className="mt-1.5 text-[0.9rem] text-[var(--ink-faint)]">
-                  {newest ? `Newest ${newest}.` : null}
-                  {criticalCount > 0 ? ` ${criticalCount} marked critical.` : null}
-                </p>
-              </div>
-            </>
-          ) : (
-            <h1 className="text-[2rem] font-medium leading-tight tracking-[-0.02em] text-[var(--ink)]">
-              You&rsquo;re all caught up.
-            </h1>
-          )}
-        </header>
-
-        {/* quiet stats */}
-        <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-3 py-1">
-          {data.dashboardStats.map((stat) => (
-            <div key={stat.label}>
-              <dt className="text-[0.76rem] font-medium text-[var(--ink-faint)]">
-                {stat.label}
-              </dt>
-              <dd className="mt-1.5 flex items-baseline gap-2">
-                <span className="text-[1.15rem] font-medium tabular-nums text-[var(--ink-soft)]">
-                  {stat.value}
-                </span>
-                <span className="text-[0.78rem] text-[var(--ink-soft)]">{stat.detail}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        {data.dataStatus && (
-          <p className="mt-6 rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-[0.85rem] text-[var(--ink-soft)]">
-            {data.dataStatus}
-          </p>
-        )}
-
-        {/* view switcher */}
-        <nav className="mt-10 flex gap-6 border-b border-[var(--line)]">
-          <Tab active={view === "review"} onClick={() => setView("review")}>
-            To review <Count>{data.counts.pendingReview}</Count>
-          </Tab>
-          <Tab active={view === "filed"} onClick={() => setView("filed")}>
-            Filed <Count>{data.counts.filed}</Count>
-          </Tab>
-          <Tab active={view === "knowledge"} onClick={() => setView("knowledge")}>
-            Knowledge <Count>{data.counts.knowledge}</Count>
-          </Tab>
+      <div className="md:grid md:grid-cols-[240px_1fr]">
+        {/* left menu */}
+        <nav className="hidden border-r border-[var(--line)] px-4 py-7 md:block">
+          <MenuGroup label="Voice inbox">
+            <MenuItem active={view === "review"} onClick={() => setView("review")} badge={data.counts.pendingReview}>
+              To review
+            </MenuItem>
+            <MenuItem active={view === "filed"} onClick={() => setView("filed")} count={data.counts.filed}>
+              Filed
+            </MenuItem>
+            <MenuItem active={view === "knowledge"} onClick={() => setView("knowledge")} count={data.counts.knowledge}>
+              Knowledge
+            </MenuItem>
+            <MenuItem active={false} onClick={toggleDetail}>
+              Board
+            </MenuItem>
+          </MenuGroup>
+          <MenuGroup label="Projects">
+            {projectCounts.map(([name, n]) => (
+              <MenuItem
+                key={name}
+                active={view === "review" && project === name}
+                onClick={() => pickProject(name)}
+                count={n}
+              >
+                {name || "Not placed"}
+              </MenuItem>
+            ))}
+          </MenuGroup>
         </nav>
 
-        {/* filters */}
-        {view === "review" && (
-          <div className="mt-7 flex flex-col gap-3 border-b border-[var(--line-soft)] pb-4">
-            <div className="flex items-center gap-4">
+        <main className="mx-auto w-full max-w-[1100px] px-5 pb-20 pt-6 sm:px-10">
+          {/* breadcrumb */}
+          <div className="flex gap-2 border-b border-[var(--line)] pb-3.5 text-[0.84rem] text-[var(--ink-faint)]">
+            Voice inbox <span>/</span> <b className="font-medium text-[var(--ink)]">{viewTitle}</b>
+            <span className="flex-1" />
+            {newest && <span className="hidden sm:inline">Last note {newest}</span>}
+          </div>
+
+          {/* banner */}
+          <div className="mb-6 mt-4 flex flex-col gap-1 rounded-[10px] bg-[var(--banner)] px-6 py-4 sm:flex-row sm:items-center sm:gap-5">
+            <span className="mono text-[var(--ink-soft)]">Voice inbox</span>
+            <div>
+              <h3 className="text-[1.1rem] font-medium tracking-[-0.01em]">Talk into your phone. It lands here.</h3>
+              <p className="mt-0.5 text-[0.875rem] text-[var(--ink-soft)]">
+                Each note gets a title, a project and a next step. File it, or dismiss it.
+              </p>
+            </div>
+          </div>
+
+          {/* title */}
+          <div className="mb-5 flex flex-wrap items-end gap-4">
+            <div>
+              <div className="mono mb-1.5 text-[var(--ink-faint)]">Jesse&rsquo;s notes</div>
+              <h1 className="text-[1.875rem] font-medium tracking-[-0.02em]">{viewTitle}</h1>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <Pill>{data.counts.pendingReview} waiting</Pill>
+                <Pill>{data.counts.filed} filed</Pill>
+                {criticalCount > 0 && <Pill critical>{criticalCount} critical</Pill>}
+              </div>
+            </div>
+            <span className="flex-1" />
+            {view === "review" && (
               <button
                 type="button"
                 onClick={() => setShowFilters((v) => !v)}
                 aria-expanded={showFilters}
-                className="text-[0.78rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
+                className="px-3 py-2.5 text-[0.875rem] text-[var(--ink-soft)] hover:text-[var(--ink)]"
               >
-                {showFilters ? "Hide filters" : "Filter"}
-                {!showFilters && (priority !== "all" || project !== "all") && (
-                  <span className="ml-1 text-[var(--accent)]">·</span>
-                )}
+                {showFilters ? "Hide filters" : "Filters"}
+                {!showFilters && priority !== "all" && <span className="ml-1 text-[var(--accent)]">·</span>}
               </button>
-              <span className="hidden text-[0.72rem] text-[var(--ink-faint)] sm:inline">
-                {showKeyHints
-                  ? "j/k move · f accept · g keep · x dismiss · u undo · esc clear"
-                  : "? for keyboard shortcuts"}
-              </span>
-            </div>
-            {showFilters && (
-              <>
+            )}
+            <button
+              type="button"
+              onClick={reviewNext}
+              disabled={pending.length === 0}
+              className="rounded-lg bg-[var(--btn)] px-[18px] py-2.5 text-[0.875rem] font-medium text-white disabled:bg-[#c9ccd3]"
+            >
+              Review next
+            </button>
+          </div>
+
+          {data.dataStatus && (
+            <p className="mb-5 rounded-[10px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-[0.85rem] text-[var(--ink-soft)]">
+              {data.dataStatus}
+            </p>
+          )}
+
+          {/* phone: view switch (the left menu is hidden on small screens) */}
+          <div className="mb-4 flex gap-2 md:hidden">
+            <Chip active={view === "review"} onClick={() => setView("review")}>To review {data.counts.pendingReview}</Chip>
+            <Chip active={view === "filed"} onClick={() => setView("filed")}>Filed {data.counts.filed}</Chip>
+            <Chip active={false} onClick={toggleDetail}>Board</Chip>
+          </div>
+
+          {/* filters */}
+          {view === "review" && (
+            <div className="mb-4 flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip active={project === "all"} onClick={() => setProject("all")}>
+                  All <b className="ml-1.5 font-medium opacity-60">{data.voiceInboxItems.length}</b>
+                </Chip>
+                {projectsInInbox.map((p) => (
+                  <Chip key={p} active={project === p} onClick={() => setProject(p)}>
+                    {p || "Not placed"}{" "}
+                    <b className="ml-1.5 font-medium opacity-60">
+                      {data.voiceInboxItems.filter((i) => i.projectBucket === p).length}
+                    </b>
+                  </Chip>
+                ))}
+                <span className="ml-auto hidden text-[0.78rem] text-[var(--ink-faint)] sm:inline">
+                  {showKeyHints ? (
+                    <>
+                      <Kbd>J</Kbd><Kbd>K</Kbd> move <Kbd>F</Kbd> file <Kbd>G</Kbd> keep <Kbd>X</Kbd> dismiss <Kbd>U</Kbd> undo
+                    </>
+                  ) : (
+                    <>
+                      <Kbd>?</Kbd> keyboard shortcuts
+                    </>
+                  )}
+                </span>
+              </div>
+              {showFilters && (
                 <FilterRow label="Priority">
                   <Chip active={priority === "all"} onClick={() => setPriority("all")}>
                     All
                   </Chip>
                   {(["critical", "high", "medium", "low"] as Priority[]).map((p) => (
-                    <Chip
-                      key={p}
-                      active={priority === p}
-                      critical={p === "critical"}
-                      onClick={() => setPriority(p)}
-                    >
+                    <Chip key={p} active={priority === p} critical={p === "critical"} onClick={() => setPriority(p)}>
                       {p}
                     </Chip>
                   ))}
                 </FilterRow>
-                {projectsInInbox.length > 1 && (
-                  <FilterRow label="Project">
-                    <select
-                      value={project}
-                      onChange={(e) => setProject(e.target.value)}
-                      className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-1 text-[0.78rem] font-medium text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
-                    >
-                      <option value="all">All projects ({data.voiceInboxItems.length})</option>
-                      {projectsInInbox.map((p) => (
-                        <option key={p} value={p}>
-                          {p || "(untagged)"}
-                        </option>
-                      ))}
-                    </select>
-                  </FilterRow>
-                )}
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
-        {/* REVIEW */}
-        {view === "review" && (
-          <section className="mt-2">
-            {data.sectionErrors.voiceInbox ? (
-              <ErrorLine message={data.sectionErrors.voiceInbox} />
-            ) : pending.length === 0 ? (
-              <EmptyLine>
-                {data.counts.pendingReview === 0
-                  ? "Nothing to review — you're clear."
-                  : "Nothing matches these filters."}
-              </EmptyLine>
+          {/* REVIEW */}
+          {view === "review" && (
+            <section>
+              {data.sectionErrors.voiceInbox ? (
+                <ErrorLine message={data.sectionErrors.voiceInbox} />
+              ) : pending.length === 0 ? (
+                <Card>
+                  <EmptyLine>
+                    {data.counts.pendingReview === 0
+                      ? "Nothing to review. You're clear."
+                      : "Nothing matches these filters."}
+                  </EmptyLine>
+                </Card>
+              ) : (
+                <Card title={project === "all" ? "All notes" : project || "Not placed"} detail={`${pending.length} ${pending.length === 1 ? "note" : "notes"}`}>
+                  <ul className="px-5">
+                    {pending.map((item) => (
+                      <CaptureCard
+                        key={item.id}
+                        item={item}
+                        projectNames={projectNames}
+                        focused={focusedId === item.id}
+                        registerHandle={registerHandle}
+                      />
+                    ))}
+                  </ul>
+                </Card>
+              )}
+            </section>
+          )}
+
+          {/* FILED */}
+          {view === "filed" &&
+            (data.filedItems.length === 0 ? (
+              <Card>
+                <EmptyLine>Nothing filed yet. File a note and it lands here.</EmptyLine>
+              </Card>
             ) : (
-              <ul className="mt-1">
-                {pending.map((item) => (
-                  <CaptureCard
-                    key={item.id}
-                    item={item}
-                    projectNames={projectNames}
-                    focused={focusedId === item.id}
-                    registerHandle={registerHandle}
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+              filedByProject.map(([bucket, items]) => (
+                <Card key={bucket} title={bucket || "Not placed"} detail={`${items.length} filed`}>
+                  <ul className="px-5">
+                    {items.map((item) => (
+                      <FiledRow key={item.id} item={item} />
+                    ))}
+                  </ul>
+                </Card>
+              ))
+            ))}
 
-        {/* FILED */}
-        {view === "filed" && (
-          <section className="mt-7">
-            {data.filedItems.length === 0 ? (
-              <EmptyLine>Nothing filed yet. File a capture and it lands here.</EmptyLine>
-            ) : (
-              <div className="space-y-9">
-                {filedByProject.map(([bucket, items]) => (
-                  <div key={bucket}>
-                    <h2
-                      className="mb-1 flex items-baseline gap-2 text-[0.95rem] font-medium"
-                      style={{ color: projectColor(bucket) }}
-                    >
-                      {bucket}
-                      <span className="text-[var(--ink-faint)]">{items.length}</span>
-                    </h2>
-                    <ul>
-                      {items.map((item) => (
-                        <FiledRow key={item.id} item={item} />
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* KNOWLEDGE */}
-        {view === "knowledge" && (
-          <section className="mt-7">
-            {data.knowledgePacketItems.length === 0 ? (
-              <EmptyLine>No knowledge kept yet.</EmptyLine>
-            ) : (
-              <ul>
-                {data.knowledgePacketItems.map((item) => (
-                  <KnowledgeRow key={item.id} item={item} />
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
-
-        <footer className="mt-16 border-t border-[var(--line)] pt-6 text-[0.78rem] text-[var(--ink-faint)]">
-          Capture · review · remember.
-        </footer>
+          {/* KNOWLEDGE */}
+          {view === "knowledge" && (
+            <Card>
+              {data.knowledgePacketItems.length === 0 ? (
+                <EmptyLine>No knowledge kept yet.</EmptyLine>
+              ) : (
+                <ul className="px-5">
+                  {data.knowledgePacketItems.map((item) => (
+                    <KnowledgeRow key={item.id} item={item} />
+                  ))}
+                </ul>
+              )}
+            </Card>
+          )}
+        </main>
       </div>
-    </main>
+    </div>
+  );
+}
+
+function countByProject(items: VoiceInboxItem[]): [string, number][] {
+  const map = new Map<string, number>();
+  for (const i of items) map.set(i.projectBucket, (map.get(i.projectBucket) ?? 0) + 1);
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+}
+
+function Logo() {
+  const dim = [1, 5, 6];
+  return (
+    <span aria-hidden className="grid grid-cols-[repeat(3,6px)] gap-[2px]">
+      {Array.from({ length: 9 }, (_, i) => (
+        <span key={i} className="size-[6px]" style={{ background: dim.includes(i) ? "#c9ccd3" : "var(--ink)" }} />
+      ))}
+    </span>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <span aria-hidden className="grid grid-cols-[repeat(3,4px)] gap-[2px] opacity-75">
+      {Array.from({ length: 9 }, (_, i) => (
+        <span key={i} className="size-[4px] bg-[var(--ink)]" style={{ opacity: i % 2 ? 0.35 : 1 }} />
+      ))}
+    </span>
+  );
+}
+
+function MenuGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-6">
+      <div className="mono px-3 pb-2.5 text-[var(--ink-faint)]">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function MenuItem({
+  active,
+  onClick,
+  badge,
+  count,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  badge?: number;
+  count?: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[0.9rem] ${
+        active ? "bg-[var(--paper-raised)] shadow-[0_0_0_1px_var(--line)]" : "hover:bg-[#eceef1]"
+      }`}
+    >
+      <MenuIcon />
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {badge != null && badge > 0 && (
+        <span className="rounded-[5px] bg-[var(--accent)] px-1.5 text-[0.7rem] text-white">{badge}</span>
+      )}
+      {count != null && <span className="text-[0.78rem] text-[var(--ink-faint)]">{count}</span>}
+    </button>
+  );
+}
+
+function Pill({ children, critical }: { children: React.ReactNode; critical?: boolean }) {
+  return (
+    <span
+      className={`rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-0.5 text-[0.78rem] ${
+        critical ? "text-[var(--critical)]" : "text-[var(--ink-soft)]"
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="mx-0.5 rounded border border-[var(--line)] bg-[var(--paper-raised)] px-1.5 font-[family-name:var(--font-mono)] text-[0.66rem]">
+      {children}
+    </kbd>
+  );
+}
+
+function Card({ title, detail, children }: { title?: string; detail?: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-4 rounded-[10px] border border-[var(--line)] bg-[var(--paper-raised)]">
+      {title && (
+        <div className="flex items-baseline gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+          <h2 className="text-[1rem] font-semibold">{title}</h2>
+          {detail && <span className="text-[0.84rem] text-[var(--ink-faint)]">{detail}</span>}
+        </div>
+      )}
+      {children}
+    </section>
   );
 }
 
@@ -392,34 +510,6 @@ function groupByProject(items: VoiceInboxItem[]): [string, VoiceInboxItem[]][] {
     items.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
   }
   return groups;
-}
-
-function Tab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`-mb-px border-b-2 pb-3 text-[0.92rem] font-medium transition-colors ${
-        active
-          ? "border-[var(--accent)] text-[var(--ink)]"
-          : "border-transparent text-[var(--ink-faint)] hover:text-[var(--ink-soft)]"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Count({ children }: { children: React.ReactNode }) {
-  return <span className="ml-1 text-[0.8rem] tabular-nums text-[var(--ink-faint)]">{children}</span>;
 }
 
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -445,16 +535,16 @@ function Chip({
   children: React.ReactNode;
 }) {
   const activeStyle = critical
-    ? "bg-[var(--critical)] text-[var(--paper)]"
-    : "bg-[var(--ink)] text-[var(--paper)]";
+    ? "border border-[var(--critical)] bg-[var(--critical)] text-white"
+    : "border border-[var(--ink)] bg-[var(--ink)] text-white";
   const idleStyle = critical
-    ? "border border-[var(--line)] text-[var(--critical)] hover:border-[var(--critical)]"
-    : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]";
+    ? "border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--critical)] hover:border-[var(--critical)]"
+    : "border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink-soft)] hover:border-[var(--ink-faint)]";
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1 text-[0.78rem] font-medium capitalize transition-colors ${
+      className={`rounded-lg px-3 py-1.5 text-[0.84rem] transition-colors ${
         active ? activeStyle : idleStyle
       }`}
     >
@@ -465,7 +555,7 @@ function Chip({
 
 function KnowledgeRow({ item }: { item: KnowledgePacketItem }) {
   return (
-    <li className="border-t border-[var(--line-soft)] py-3.5 first:border-t-0">
+    <li className="border-t border-[var(--line-soft)] py-4 first:border-t-0">
       <h3 className="text-[0.95rem] font-medium leading-snug text-[var(--ink)]">{item.title}</h3>
       <p className="mt-1 line-clamp-2 text-[0.82rem] leading-relaxed text-[var(--ink-soft)]">
         {item.summary}
@@ -476,12 +566,12 @@ function KnowledgeRow({ item }: { item: KnowledgePacketItem }) {
 
 function ErrorLine({ message }: { message: string }) {
   return (
-    <p className="mt-3 rounded-lg border border-[rgba(255,138,122,0.3)] bg-[rgba(255,138,122,0.07)] px-3.5 py-2.5 text-[0.85rem] text-[var(--clay)]">
+    <p className="mt-3 rounded-[10px] border border-[#f2d3cd] bg-[#fdf3f1] px-4 py-3 text-[0.85rem] text-[var(--critical)]">
       {message}
     </p>
   );
 }
 
 function EmptyLine({ children }: { children: React.ReactNode }) {
-  return <p className="mt-4 text-[0.9rem] text-[var(--ink-faint)]">{children}</p>;
+  return <p className="px-5 py-6 text-[0.9rem] text-[var(--ink-faint)]">{children}</p>;
 }

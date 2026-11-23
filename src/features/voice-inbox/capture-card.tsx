@@ -174,7 +174,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
           type="button"
           disabled={pending}
           onClick={doDismiss}
-          className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-[0.78rem] font-medium text-[var(--ink-soft)] hover:border-[var(--clay)] hover:text-[var(--clay)] disabled:opacity-50"
+          className="shrink-0 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[0.78rem] font-medium text-[var(--ink-soft)] hover:border-[var(--clay)] hover:text-[var(--clay)] disabled:opacity-50"
         >
           Dismiss
         </button>
@@ -192,17 +192,17 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   return (
     <li
       ref={liRef}
-      className={`relative border-t border-[var(--line-soft)] py-6 pl-9 first:border-t-0 ${focusRing}`}
+      className={`relative border-t border-[var(--line-soft)] py-5 pl-9 first:border-t-0 ${focusRing}`}
     >
       {node}
       <div className="min-w-0">
         <h3 className="text-[1.06rem] font-medium leading-snug text-[var(--ink)]">
           {item.title}
         </h3>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[0.78rem]">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.76rem]">
           <PriorityLabel priority={priority} />
           {item.kind && <span className="text-[var(--ink-faint)]">{item.kind}</span>}
-          <span style={{ color: projectColor(bucket) }}>{bucket}</span>
+          <span className="rounded-md bg-[var(--paper)] px-2 py-0.5 text-[var(--ink)]">{bucket}</span>
         </div>
         <p className="mt-2.5 max-w-[62ch] text-[0.94rem] leading-relaxed text-[var(--ink-soft)]">
           {item.summary}
@@ -210,8 +210,8 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
 
         {item.nextStep && (
           <p className="mt-1.5 text-[0.88rem] leading-relaxed text-[var(--ink)]">
-            <span className="font-medium text-[var(--accent)]">Next step</span>{" "}
-            <span className="text-[var(--ink-soft)]">{item.nextStep}</span>
+            <span className="mono mr-1.5 text-[var(--ink-faint)]">Next</span>
+            <span className="text-[var(--ink)]">{item.nextStep}</span>
           </p>
         )}
 
@@ -220,7 +220,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
             {item.people.map((person) => (
               <span
                 key={`p-${person}`}
-                className="rounded-md bg-[var(--accent-soft)] px-2 py-0.5 text-[0.72rem] font-medium text-[var(--accent)]"
+                className="rounded-md border border-[var(--line)] px-2 py-0.5 text-[0.72rem] text-[var(--ink-soft)]"
               >
                 {person}
               </span>
@@ -291,7 +291,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
             type="button"
             onClick={() => setShowAdjust((v) => !v)}
             aria-expanded={showAdjust}
-            className="rounded-full px-3 py-1.5 text-[0.78rem] font-medium text-[var(--ink-faint)] transition-colors hover:text-[var(--accent)]"
+            className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 py-1.5 text-[0.8rem] font-medium text-[var(--ink)] transition-colors hover:border-[var(--ink-faint)]"
           >
             {showAdjust ? "Close" : "Adjust"}
           </button>
@@ -311,7 +311,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
               value={bucket}
               onChange={(e) => setBucket(e.target.value)}
               disabled={pending}
-              className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-2.5 py-1.5 text-[0.78rem] font-medium text-[var(--accent)] outline-none focus:border-[var(--accent)]"
+              className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1.5 text-[0.78rem] font-medium text-[var(--accent)] outline-none focus:border-[var(--accent)]"
             >
               {projects.map((b) => (
                 <option key={b} value={b}>
@@ -328,7 +328,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
               value={priority}
               onChange={(e) => setPriority(e.target.value as Priority)}
               disabled={pending}
-              className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-2.5 py-1.5 text-[0.78rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
+              className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1.5 text-[0.78rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
             >
               <option value="critical">Critical</option>
               <option value="high">High</option>
@@ -370,12 +370,12 @@ function ActionButton({
   subtle?: boolean;
 }) {
   const base =
-    "rounded-md px-3.5 py-1.5 text-[0.8rem] font-medium transition-colors disabled:opacity-50";
+    "rounded-lg px-3.5 py-1.5 text-[0.8rem] font-medium transition-colors disabled:opacity-50";
   const style = primary
-    ? "border border-[var(--btn-line)] bg-[var(--btn)] text-[var(--ink)] hover:border-[var(--accent)]"
+    ? "border border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[#2330b8]"
     : subtle
       ? "text-[var(--ink-faint)] hover:text-[var(--clay)]"
-      : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--accent)] hover:text-[var(--accent)]";
+      : "border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] hover:border-[var(--ink-faint)]";
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${style}`}>
       {children}
@@ -384,8 +384,8 @@ function ActionButton({
 }
 
 /**
- * The Graph night marker: a thin vertical line with a dot in the project's
- * colour. Critical items get a red ring round the dot.
+ * Row marker: a small outlined circle on the left of each capture.
+ * Critical items get a red ring. The project colour shows as a small dot inside.
  * Needs a `relative` parent with left padding (pl-9).
  */
 export function GraphNode({
@@ -398,20 +398,16 @@ export function GraphNode({
   top?: string;
 }) {
   return (
-    <>
-      <span aria-hidden className="absolute inset-y-0 left-[9px] w-px bg-[var(--edge)]" />
-      <span
-        aria-hidden
-        className="absolute left-[4px] size-[11px] rounded-full"
-        style={{
-          top,
-          background: color,
-          boxShadow: critical
-            ? `0 0 0 2px var(--paper), 0 0 0 3.5px var(--critical), 0 0 14px ${color}`
-            : `0 0 0 4px var(--paper), 0 0 14px ${color}`,
-        }}
-      />
-    </>
+    <span
+      aria-hidden
+      className="absolute left-0 grid size-5 place-items-center rounded-full border bg-[var(--paper-raised)]"
+      style={{
+        top: `calc(${top} - 5px)`,
+        borderColor: critical ? "var(--critical)" : "var(--line)",
+      }}
+    >
+      <span className="size-1.5 rounded-full" style={{ background: color }} />
+    </span>
   );
 }
 
