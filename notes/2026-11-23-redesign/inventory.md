@@ -61,3 +61,4 @@ Light grey page, white cards, blue accent, Archivo, left menu in groups, one dar
 - 23 Nov: Tein look built on the branch `tein-look` (`shots/built-tein.png`). New frame: top bar, left menu (Voice inbox, Projects), breadcrumb, banner, title with count tags, "Review next" button. The graph art and the row of four totals are gone. Same address, same routes, same data. Live only after Jesse says yes.
 - 23 Nov: dismissed "Dashboard Data Ball Time-Lapse Concept", "Cross-check Rich's Google Ads Claims", "Add Client Service Costs to Dashboard" (rows kept).
 - 23 Nov: 22 more cut (16 to review dismissed, 6 filed archived, incl. the untitled 22 Jul capture). Rows kept.
+- 23 Nov: 16 more cut (4 dismissed, 12 archived). 8 captures left: 1 to review, 7 filed. Test Knowledge Packet still there: removing it means deleting the row (no status column), waiting on Jesse's yes.
