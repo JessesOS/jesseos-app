@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Inbox flow (mock)</title>
+<style>
+@font-face{font-family:Archivo;src:url(fonts/archivo.woff2) format('woff2');font-weight:100 900}
+@font-face{font-family:Mono;src:url(fonts/martian-mono.woff2) format('woff2')}
+:root{
+  --page:#F4F5F7; --card:#FFFFFF; --line:#E5E7EB; --line2:#EEF0F3;
+  --ink:#15171C; --ink2:#5B606B; --ink3:#8A8F99;
+  --dark:#15171C; --accent:#2B37D9; --accent-soft:#ECEEFF; --ok:#1F8A4C; --ok-soft:#E7F5EC;
+  --red:#C2412D; --banner:#ECEEF2; --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--page);color:var(--ink);font:15px/1.45 Archivo,system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.mono{font-family:Mono,ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+
+.top{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;padding:0 28px;position:sticky;top:0;z-index:5}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.02em;flex:none}
+.logo i{display:grid;grid-template-columns:repeat(3,6px);gap:2px}
+.logo i b{width:6px;height:6px;background:var(--ink)}
+.logo i b:nth-child(2),.logo i b:nth-child(6),.logo i b:nth-child(7){background:#C9CCD3}
+.search{flex:1;max-width:560px;display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--page)}
+.search input{border:0;background:transparent;outline:0;flex:1;font-size:14.5px}
+.search span{color:var(--ink3)}
+.av{width:30px;height:30px;border-radius:50%;background:var(--page);border:1px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:600;margin-left:auto;flex:none}
+
+.wrap{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 64px)}
+nav.side{padding:28px 16px;border-right:1px solid var(--line)}
+.grp .mono{color:var(--ink3);padding:0 12px 10px}
+.side button{display:flex;width:100%;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;border:0;background:transparent;text-align:left;font-size:14.5px}
+.side button:hover{background:#ECEEF1}
+.side button.on{background:#fff;box-shadow:0 0 0 1px var(--line)}
+.ic{width:18px;height:18px;display:grid;grid-template-columns:repeat(3,4px);gap:2px;align-content:center;opacity:.75}
+.ic b{width:4px;height:4px;background:var(--ink)}
+.ic b:nth-child(2n){opacity:.35}
+.side .n{margin-left:auto;background:var(--accent);color:#fff;font-size:11px;border-radius:5px;padding:1px 6px}
+.side p{font-size:12.5px;color:var(--ink3);padding:18px 12px 0;line-height:1.5}
+
+main{padding:24px 40px 80px;max-width:1040px}
+.crumb{font-size:13.5px;color:var(--ink3);padding-bottom:14px;border-bottom:1px solid var(--line);display:flex;gap:8px}
+.crumb b{color:var(--ink);font-weight:500}
+.banner{margin:18px 0 24px;background:var(--banner);border-radius:var(--r);padding:16px 24px;display:flex;align-items:center;gap:18px}
+.banner .mono{color:var(--ink2);flex:none}
+.banner h3{font-size:18px;font-weight:500;letter-spacing:-.01em}
+.banner p{color:var(--ink2);font-size:14px;margin-top:2px}
+.head{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px}
+.head h1{font-size:30px;font-weight:500;letter-spacing:-.02em;display:flex;align-items:baseline;gap:14px}
+.head h1 .big{font-size:30px;color:var(--accent)}
+.head p{color:var(--ink2);margin-top:4px}
+
+.sec{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px}
+.sec-h{display:flex;align-items:baseline;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line2)}
+.sec-h h2{font-size:15px;font-weight:600}
+.sec-h span{color:var(--ink3);font-size:13px}
+.row{padding:16px 20px;border-bottom:1px solid var(--line2)}
+.row:last-child{border-bottom:0}
+.row h4{font-size:15px;font-weight:500;line-height:1.3}
+.row .sum{color:var(--ink2);font-size:14px;margin-top:6px;max-width:68ch}
+.meta{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:12.5px;color:var(--ink3)}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 8px;color:var(--ink2);background:#fff}
+.tag.proj{background:var(--page);border-color:transparent;color:var(--ink)}
+.tag.ai{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.tag.me{background:var(--page);border-color:transparent;color:var(--ink)}
+.tag.ok{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.tag.warn{color:var(--red);border-color:#F2D3CD}
+.want{margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px}
+.want .mono{color:var(--ink3)}
+.want b{font-weight:500}
+.sure{display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:13px}
+.sure i{display:block;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.sure i em{display:block;height:100%;background:var(--ink2)}
+.acts{display:flex;gap:8px;margin-top:12px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-size:13.5px;font-weight:500}
+.btn:hover{border-color:var(--ink3)}
+.btn.yes{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.bin{color:var(--ink2)}
+.change{display:none;margin-top:10px;padding:12px;border:1px solid var(--line2);background:var(--page);border-radius:8px;gap:8px;flex-wrap:wrap;align-items:center}
+.row.chg .change{display:flex}
+.change select,.change input{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;font-size:13.5px}
+.change input{flex:1;min-width:200px}
+.split{border-left:2px solid var(--line);margin:4px 20px 0;padding-left:16px}
+.split .row{padding-left:0;padding-right:0}
+.rec{display:flex;align-items:center;gap:10px;padding:14px 20px 4px;font-size:13.5px;color:var(--ink2)}
+.play{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none;background:#fff}
+.play::after{content:'';border-left:6px solid var(--ink2);border-top:4px solid transparent;border-bottom:4px solid transparent;margin-left:2px}
+.landed{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13.5px}
+.landed .arrow{color:var(--ink3)}
+.undo{margin-left:auto;color:var(--ink3);font-size:13px;background:none;border:0}
+.life{display:flex;align-items:center;gap:14px;padding:16px 20px}
+.life .lock{width:30px;height:30px;border-radius:8px;background:var(--page);display:grid;place-items:center;font-size:14px}
+.tidy{font-size:13px;color:var(--ink3);margin:4px 2px 0}
+.empty{padding:22px 20px;color:var(--ink3)}
+.hide{display:none!important}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--dark);color:#fff;border-radius:10px;padding:10px 16px;font-size:13.5px;opacity:0;transition:opacity .2s}
+.toast.on{opacity:1}
+.note{position:fixed;right:20px;bottom:20px;background:var(--dark);color:#fff;border-radius:10px;padding:12px 16px;font-size:13px;max-width:280px}
+.note .mono{color:#AEB2BA;display:block;margin-bottom:4px}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}nav.side{display:none}main{padding:20px 16px 80px}.top{padding:0 16px}.note{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo"><i><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i>JesseOS</div>
+  <label class="search"><span>⌕</span><input id="q" placeholder="Search every note, recording and where it went"></label>
+  <span class="av">J</span>
+</header>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="grp"><div class="mono">Voice inbox</div>
+      <button data-v="needs" class="on"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>Needs you<span class="n" id="navN">0</span></button>
+      <button data-v="new"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>New</button>
+      <button data-v="done"><span class="ic"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>Done</button>
+    </div>
+    <p>New: just captured. If the AI was sure, it already filed it.<br><br>Needs you: only what it wasn't sure about, or anything that sends, spends or deletes.<br><br>Done: filed, acted on or binned, with who did it.</p>
+  </nav>
+
+  <main>
+    <div class="crumb">Voice inbox <span>/</span> <b id="crumb">Needs you</b></div>
+
+    <div class="banner">
+      <span class="mono">Voice inbox</span>
+      <div><h3>Talk into your phone. The AI files what it's sure of.</h3>
+      <p id="line">These are the only notes waiting on you. Yes files it, Change moves it, Bin drops it.</p></div>
+    </div>
+
+    <div class="head">
+      <div>
+        <h1 id="title">Needs you <span class="big" id="bigN">0</span></h1>
+      </div>
+    </div>
+
+    <div id="results" class="hide"></div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="note"><span class="mono">Mock only</span>Real notes, made-up AI scores. Clicking changes nothing in the app.</div>
+
+<script>
+const DEST={
+  clients:'Clients STATUS · Waiting on Jesse',
+  content:'Note in content ideas',
+  agency:'AgencyOS STATUS · Waiting on Jesse',
+  person:'Rich’s file in the brain',
+  hq:'HQ build notes',
+  life:'Life inbox'
+};
+const PROJECTS=[['clients','Clients'],['content','Content ideas'],['agency','AgencyOS'],['person','A person’s file'],['hq','HQ build notes'],['life','Life (private)']];
+
+// Real captures. AI confidence scores are made up for the mock.
+let items=[
+  {id:1,state:'needs',t:'Explain how AI works, content idea',sm:'Content idea to explain AI basics (models, chips, networking) for a general audience, maybe by interviewing Shervin.',d:'22 Nov',dur:'0:48',want:'content',sure:62,why:'Could be a content idea or a client offer.'},
+  {id:2,state:'needs',t:'Send the condensed Google Ads report to Rich',sm:'Rich says Google Ads accounts are handed over fine. Condense the report and send it to him, then check it against the contract.',d:'1 Aug',dur:'1:12',want:'agency',sure:91,why:'This one sends a message, so it waits for your yes.',sends:true},
+  {id:3,state:'needs',t:'RT Digital chat archive and film idea',sm:'Gather the WhatsApp and Slack history from RT Digital and turn it into a short film for Rich.',d:'13 Jul',dur:'2:05',want:'content',sure:48,why:'Not sure if this is content, a note about Rich, or nothing.'},
+  {id:10,state:'needs',rec:'r1',t:'Filter Rich’s directions through one agreed brief',sm:'Run everything Rich asks for (WhatsApp, Slack, Granola, Read AI) past one agreed "true north" for the agency.',d:'19 Jul',want:'agency',sure:74,why:'Fits AgencyOS, but it might be a note about Rich.'},
+  {id:11,state:'needs',rec:'r1',t:'Health dashboards for each client',sm:'A simple green, amber, red view of how each client and the agency are doing.',d:'19 Jul',want:'clients',sure:68,why:'Could be Clients or AgencyOS.'},
+  {id:12,state:'done',rec:'r1',t:'Look back at the first AgencyOS build',sm:'Re-read the original 10-page AgencyOS build with Claude for ideas.',d:'19 Jul',dest:'agency',by:'ai',how:'filed'},
+
+  {id:20,state:'new',t:'Tradie ad: missed calls',sm:'Video ad idea: a tradie misses calls all day, does admin in his car, and loses time with his family.',d:'Today',dur:'1:40',dest:'content',by:'ai',how:'filed'},
+  {id:21,state:'new',t:'Aussie down-to-earth AI ad',sm:'Ad idea: a relatable AI turns up for a stressed tradesman and handles his calls so he can be with his family.',d:'Today',dur:'1:05',dest:'content',by:'ai',how:'filed'},
+  {id:22,state:'new',t:'Customer survey and AI check-ins',sm:'Mix human surveys with AI check-ins, analyse the answers, show the results on a dashboard.',d:'Today',dur:'0:56',dest:'clients',by:'ai',how:'filed'},
+
+  {id:30,state:'done',t:'Run Luisa through the client portal',sm:'Walk Luisa through the customer journey and portal, and prepare her ads.',d:'9 Jul',dest:'clients',by:'me',how:'filed'},
+  {id:31,state:'done',t:'Rich ignoring client feedback again',sm:'Rich dismisses client feedback instead of listening. Talk to him about it.',d:'23 Jul',dest:'person',by:'me',how:'filed'},
+  {id:32,state:'done',t:'Unified data dashboard idea',sm:'One live dashboard pulling Slack, Read AI, GoHighLevel, Meta and Google data together.',d:'24 Jul',dest:'hq',by:'ai',how:'filed'},
+  {id:33,state:'done',t:'Mic test recording',sm:'A test phrase repeated. Nothing in it.',d:'26 Oct',by:'ai',how:'binned'},
+  {id:34,state:'done',t:'Surf day chatter',sm:'Background talk about waxing a board and parking. Recorded by accident.',d:'25 Oct',by:'ai',how:'binned'},
+  {id:35,state:'done',t:'Dashboard data ball time-lapse',sm:'A "data ball" that goes from orange to green over 100 days as a client gets healthier.',d:'1 Aug',by:'me',how:'binned'}
+];
+const LIFE_COUNT=4; // personal notes: shown only as a count
+const RECS={r1:{label:'One recording, 19 Jul, 3:20',split:'Split into 3 notes'}};
+
+let view='needs';
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function needsCount(){return items.filter(i=>i.state==='needs').length}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800)}
+
+function card(i){
+  const sure=`<span class="sure"><i><em style="width:${i.sure}%"></em></i>${i.sure}% sure</span>`;
+  const opts=PROJECTS.map(([k,l])=>`<option value="${k}" ${k===i.want?'selected':''}>${l}</option>`).join('');
+  return `<div class="row" data-id="${i.id}">
+    <h4>${esc(i.t)}</h4>
+    <p class="sum">${esc(i.sm)}</p>
+    <div class="meta">${i.d}${i.dur?' · '+i.dur:''}${i.sends?' <span class="tag warn">Sends a message</span>':''}</div>
+    <div class="want"><span class="mono">AI wants</span><b>${DEST[i.want]}</b>${sure}</div>
+    <div class="meta" style="margin-top:4px">${esc(i.why)}</div>
+    <div class="acts">
+      <button class="btn yes" data-a="yes">Yes</button>
+      <button class="btn" data-a="change">Change</button>
+      <button class="btn bin" data-a="bin">Bin</button>
+    </div>
+    <div class="change">
+      <select>${opts}</select>
+      <input placeholder="Or type a correction, e.g. this is for Chris, not Rich">
+      <button class="btn yes" data-a="save">Save</button>
+    </div>
+  </div>`;
+}
+function doneRow(i){
+  const who=i.by==='ai'?'<span class="tag ai">AI</span>':'<span class="tag me">You</span>';
+  const where=i.how==='binned'
+    ?'<span class="tag">Binned</span>'
+    :`<span class="arrow">→</span><span class="tag ok">${DEST[i.dest]}</span>`;
+  const extra=i.note?` <span class="meta" style="margin:0">“${esc(i.note)}”</span>`:'';
+  return `<div class="row" data-id="${i.id}">
+    <h4>${esc(i.t)}</h4>
+    <div class="landed">${who}${where}${extra}<button class="undo" data-a="undo">Undo</button></div>
+    <div class="meta">${i.d}${i.rec?' · part of one recording':''}</div>
+  </div>`;
+}
+
+function render(){
+  const n=needsCount();
+  $('#navN').textContent=n;$('#navN').style.display=n?'':'none';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  const titles={needs:'Needs you',new:'New',done:'Done'};
+  $('#crumb').textContent=titles[view];
+  $('#title').innerHTML=view==='needs'?`Needs you <span class="big">${n}</span>`:titles[view];
+  $('#line').textContent={
+    needs:'These are the only notes waiting on you. Yes files it, Change moves it, Bin drops it.',
+    new:'What came in today. The AI already filed the ones it was sure about.',
+    done:'Everything settled, with where it went and who did it.'
+  }[view];
+  let h='';
+  if(view==='needs'){
+    const loose=items.filter(i=>i.state==='needs'&&!i.rec);
+    const split=items.filter(i=>i.rec==='r1');
+    h+=`<section class="sec"><div class="sec-h"><h2>Waiting on you</h2><span>${n} ${n===1?'note':'notes'}</span></div>`;
+    h+=loose.length?loose.map(card).join(''):'';
+    if(split.some(i=>i.state==='needs')){
+      h+=`<div class="rec"><span class="play"></span><b style="font-weight:500;color:var(--ink)">${RECS.r1.label}</b> · ${RECS.r1.split}</div><div class="split">`;
+      h+=split.map(i=>i.state==='needs'?card(i):`<div class="row"><h4 style="color:var(--ink3)">${esc(i.t)}</h4><div class="landed"><span class="tag ai">AI</span><span class="arrow">→</span><span class="tag ok">${DEST[i.dest]}</span></div></div>`).join('');
+      h+='</div>';
+    }
+    if(!n)h+='<div class="empty">Nothing needs you. The AI has filed the rest.</div>';
+    h+='</section>';
+  }
+  if(view==='new'){
+    const list=items.filter(i=>i.state==='new');
+    h+=`<section class="sec"><div class="sec-h"><h2>Today</h2><span>${list.length} filed by the AI</span></div>`;
+    h+=list.map(i=>`<div class="row"><h4>${esc(i.t)}</h4><p class="sum">${esc(i.sm)}</p><div class="landed"><span class="tag ai">AI</span><span class="arrow">→</span><span class="tag ok">${DEST[i.dest]}</span><span class="meta" style="margin:0">${i.dur} · 96% sure</span><button class="undo" data-a="undo">Undo</button></div></div>`).join('');
+    h+='</section>';
+  }
+  if(view==='done'){
+    const list=items.filter(i=>i.state==='done'||i.state==='new');
+    h+=`<section class="sec"><div class="sec-h"><h2>Settled</h2><span>${list.length} notes</span></div>${list.map(doneRow).join('')}</section>`;
+    h+=`<section class="sec"><div class="life"><span class="lock">🔒</span><div><b style="font-weight:500">${LIFE_COUNT} notes went to the Life inbox</b><div class="meta" style="margin-top:2px">Personal. Only the count shows here.</div></div></div></section>`;
+    h+=`<p class="tidy">Auto-tidied after 7 days: anything left in Needs you moves here as binned. You can bring it back.</p>`;
+  }
+  $('#view').innerHTML=h;
+}
+
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('.side button');if(nav){view=nav.dataset.v;$('#q').value='';search();render();return}
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const row=b.closest('.row');const it=items.find(x=>x.id==row.dataset.id);
+  const a=b.dataset.a;
+  if(a==='yes'){it.state='done';it.dest=it.want;it.by='me';it.how='filed';toast('Filed: '+DEST[it.dest])}
+  if(a==='change'){row.classList.toggle('chg');return}
+  if(a==='save'){const v=row.querySelector('select').value;const note=row.querySelector('input').value.trim();it.state='done';it.dest=v;it.by='me';it.how='filed';if(note)it.note=note;toast('Moved: '+DEST[v])}
+  if(a==='bin'){it.state='done';it.by='me';it.how='binned';toast('Binned. Undo it from Done.')}
+  if(a==='undo'){it.state='needs';it.want=it.want||it.dest||'content';it.sure=it.sure||80;it.why=it.why||'Brought back by you.';it.by=null;toast('Back in Needs you')}
+  render();
+});
+
+function search(){
+  const q=$('#q').value.trim().toLowerCase();
+  const r=$('#results');
+  if(!q){r.classList.add('hide');$('#view').classList.remove('hide');return}
+  const hits=items.filter(i=>(i.t+' '+i.sm+' '+(i.dest?DEST[i.dest]:'')).toLowerCase().includes(q));
+  const stateName={needs:'Needs you',new:'New',done:'Done'};
+  r.innerHTML=`<section class="sec"><div class="sec-h"><h2>Search</h2><span>${hits.length} found for “${esc(q)}” · Life notes are not searched here</span></div>${hits.length?hits.map(i=>`<div class="row"><h4>${esc(i.t)}</h4><p class="sum">${esc(i.sm)}</p><div class="meta"><span class="tag">${stateName[i.state]}</span>${i.dest&&i.state!=='needs'?'<span class="tag ok">'+DEST[i.dest]+'</span>':''}${i.d}</div></div>`).join(''):'<div class="empty">Nothing found.</div>'}</section>`;
+  r.classList.remove('hide');$('#view').classList.add('hide');
+}
+$('#q').addEventListener('input',search);
+const qs=new URLSearchParams(location.search);
+if(qs.get('view'))view=qs.get('view');
+render();
+if(qs.get('test')){ // self-check: Yes on the first card, then Bin and Change on the next ones
+  document.querySelector('[data-a=yes]').click();
+  document.querySelector('[data-a=bin]').click();
+  document.querySelector('[data-a=change]').click();
+  document.title='needs='+needsCount();
+}
+if(qs.get('q')){$('#q').value=qs.get('q');search()}
+</script>
+</body>
+</html>
