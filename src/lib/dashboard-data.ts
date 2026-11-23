@@ -25,6 +25,7 @@ export type DashboardCounts = {
 export type DashboardData = {
   voiceInboxItems: VoiceInboxItem[];
   filedItems: VoiceInboxItem[];
+  doneItems: VoiceInboxItem[];
   projects: Project[];
   reviewQueueItems: ReviewQueueItem[];
   knowledgePacketItems: KnowledgePacketItem[];
@@ -48,6 +49,7 @@ export function createEmptyDashboardData(dataStatus?: string): DashboardData {
   return {
     voiceInboxItems: [],
     filedItems: [],
+    doneItems: [],
     projects: [],
     reviewQueueItems: [],
     knowledgePacketItems: [],

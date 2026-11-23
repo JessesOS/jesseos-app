@@ -1,6 +1,6 @@
 import { getKnowledgePacketItems } from "@/features/knowledge-packets/data";
 import { getActiveProjects } from "@/features/projects/data";
-import { getFiledItems, getVoiceInboxItems } from "@/features/voice-inbox/data";
+import { getDoneItems, getFiledItems, getVoiceInboxItems } from "@/features/voice-inbox/data";
 import {
   createDashboardStats,
   createEmptyDashboardData,
@@ -19,17 +19,19 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  const [voiceInbox, filed, knowledgePackets, counts, projects] = await Promise.all([
+  const [voiceInbox, filed, knowledgePackets, counts, projects, done] = await Promise.all([
     getVoiceInboxItems(supabase),
     getFiledItems(supabase),
     getKnowledgePacketItems(supabase),
     getCounts(supabase),
     getActiveProjects(supabase),
+    getDoneItems(supabase),
   ]);
 
   return {
     voiceInboxItems: voiceInbox.items,
     filedItems: filed.items,
+    doneItems: done.items,
     projects,
     reviewQueueItems: [],
     knowledgePacketItems: knowledgePackets.items,

@@ -22,6 +22,9 @@ export type VoiceInboxItem = {
   disposable: boolean;
   suggestedAction: SuggestedAction;
   hasAudio: boolean;
+  /** Set on Done items: filed, dismissed or archived. */
+  status?: string;
+  reviewedAt?: string;
 };
 
 export type VoiceInboxRow = {
@@ -41,4 +44,6 @@ export type VoiceInboxRow = {
   disposable: boolean | null;
   suggested_action: string | null;
   audio_path: string | null;
+  status?: string | null;
+  reviewed_at?: string | null;
 };

@@ -6,7 +6,6 @@ import { FALLBACK_PROJECT_NAMES, type ActionResult } from "./buckets";
 import {
   fileCapture,
   dismissCapture,
-  promoteCapture,
   undoReview,
   getAudioUrl,
 } from "./actions";
@@ -62,22 +61,13 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   };
 
   const doFile = () => run(() => fileCapture(item.id, bucket, priority), "filed");
-  const doKeep = () => run(() => promoteCapture(item.id, bucket, priority), "kept");
   const doDismiss = () => run(() => dismissCapture(item.id), "dismissed");
 
   // The AI's suggestion becomes the one-tap primary action.
-  const doPrimary =
-    item.suggestedAction === "keep_as_knowledge"
-      ? doKeep
-      : item.suggestedAction === "dismiss"
-        ? doDismiss
-        : doFile;
-  const primaryLabel =
-    item.suggestedAction === "keep_as_knowledge"
-      ? "Keep as knowledge"
-      : item.suggestedAction === "dismiss"
-        ? "Dismiss"
-        : `Add to ${bucket}`;
+  // Yes = do what the AI suggested: file it to its project, or bin it.
+  const aiWantsBin = item.suggestedAction === "dismiss";
+  const doPrimary = aiWantsBin ? doDismiss : doFile;
+  const primaryLabel = "Yes";
 
   const handleUndo = () => {
     setError(null);
@@ -102,12 +92,12 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   // Expose actions for keyboard shortcuts; keep the ref map current.
   const handleRef = useRef<CaptureCardHandle>({
     primary: doPrimary,
-    keep: doKeep,
+    keep: doFile,
     dismiss: doDismiss,
     undo: handleUndo,
   });
   useEffect(() => {
-    handleRef.current = { primary: doPrimary, keep: doKeep, dismiss: doDismiss, undo: handleUndo };
+    handleRef.current = { primary: doPrimary, keep: doFile, dismiss: doDismiss, undo: handleUndo };
   });
 
   useEffect(() => {
@@ -135,7 +125,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   // drop it from the list on the next load; this gives instant feedback).
   if (done) {
     const label =
-      done === "filed" ? `Added to ${bucket}` : done === "kept" ? "Kept as knowledge" : "Dismissed";
+      done === "filed" ? `Filed to ${bucket}` : done === "kept" ? "Kept as knowledge" : "Binned";
     return (
       <li
         ref={liRef}
@@ -282,8 +272,14 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
           <audio controls autoPlay src={audioUrl} className="mt-2 h-9 w-full max-w-sm" />
         )}
 
-        {/* review controls — one-tap accept, everything else behind Adjust */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* what the AI suggests, then one tap: Yes, Change, Bin */}
+        <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.88rem]">
+          <span className="mono text-[var(--ink-faint)]">AI wants</span>
+          <span className="font-medium text-[var(--ink)]">
+            {aiWantsBin ? "Bin it" : `File to ${bucket}`}
+          </span>
+        </p>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
           <ActionButton primary disabled={pending} onClick={doPrimary}>
             {primaryLabel}
           </ActionButton>
@@ -293,8 +289,13 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
             aria-expanded={showAdjust}
             className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 py-1.5 text-[0.8rem] font-medium text-[var(--ink)] transition-colors hover:border-[var(--ink-faint)]"
           >
-            {showAdjust ? "Close" : "Adjust"}
+            {showAdjust ? "Close" : "Change"}
           </button>
+          {!aiWantsBin && (
+            <ActionButton disabled={pending} onClick={doDismiss}>
+              Bin
+            </ActionButton>
+          )}
 
           <span className="ml-auto text-[0.76rem] text-[var(--ink-faint)]">
             {item.createdAt}
@@ -302,7 +303,8 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
         </div>
 
         {showAdjust && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--line-soft)] bg-[var(--paper-raised)] px-3 py-2.5">
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--line-soft)] bg-[var(--paper)] px-3 py-2.5">
+            <span className="text-[0.8rem] text-[var(--ink-soft)]">File to</span>
             <label className="sr-only" htmlFor={`bucket-${item.id}`}>
               Project for {item.title}
             </label>
@@ -311,7 +313,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
               value={bucket}
               onChange={(e) => setBucket(e.target.value)}
               disabled={pending}
-              className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1.5 text-[0.78rem] font-medium text-[var(--accent)] outline-none focus:border-[var(--accent)]"
+              className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1.5 text-[0.8rem] font-medium text-[var(--ink)] outline-none focus:border-[var(--accent)]"
             >
               {projects.map((b) => (
                 <option key={b} value={b}>
@@ -328,7 +330,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
               value={priority}
               onChange={(e) => setPriority(e.target.value as Priority)}
               disabled={pending}
-              className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1.5 text-[0.78rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
+              className="rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-2.5 py-1.5 text-[0.8rem] font-medium capitalize text-[var(--ink-soft)] outline-none focus:border-[var(--ink-soft)]"
             >
               <option value="critical">Critical</option>
               <option value="high">High</option>
@@ -336,14 +338,8 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
               <option value="low">Low</option>
             </select>
 
-            <ActionButton disabled={pending} onClick={doFile}>
-              Add
-            </ActionButton>
-            <ActionButton disabled={pending} onClick={doKeep}>
-              Keep as knowledge
-            </ActionButton>
-            <ActionButton subtle disabled={pending} onClick={doDismiss}>
-              Dismiss
+            <ActionButton primary disabled={pending} onClick={doFile}>
+              Save
             </ActionButton>
           </div>
         )}

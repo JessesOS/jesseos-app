@@ -11,7 +11,7 @@ import type {
 
 const VOICE_INBOX_COLUMNS =
   "id,created_at,title,summary,raw_text,transcript,priority,project_bucket," +
-  "next_step,action_items,tags,people,kind,disposable,suggested_action,audio_path";
+  "next_step,action_items,tags,people,kind,disposable,suggested_action,audio_path,status,reviewed_at";
 
 // Pre-migration-003 column set — lets the dashboard keep rendering if the new
 // columns don't exist yet.
@@ -33,6 +33,19 @@ export async function getFiledItems(
 ): Promise<SectionResult<VoiceInboxItem>> {
   return queryItems(supabase, (q) =>
     q.eq("status", "filed").order("reviewed_at", { ascending: false }).limit(200),
+  );
+}
+
+/** Everything settled: filed, dismissed or archived. Newest decision first. */
+export async function getDoneItems(
+  supabase: SupabaseClient,
+): Promise<SectionResult<VoiceInboxItem>> {
+  return queryItems(supabase, (q) =>
+    q
+      .in("status", ["filed", "dismissed", "archived"])
+      .order("reviewed_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(300),
   );
 }
 
@@ -87,6 +100,8 @@ function mapVoiceInboxRow(row: VoiceInboxRow): VoiceInboxItem {
     disposable: row.disposable === true,
     suggestedAction: normalizeSuggestedAction(row.suggested_action),
     hasAudio: Boolean(row.audio_path),
+    status: row.status ?? undefined,
+    reviewedAt: row.reviewed_at ? formatDisplayDate(row.reviewed_at) : undefined,
   };
 }
 
