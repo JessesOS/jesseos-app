@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Inbox looks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Sora:wght@300;400;600&family=IBM+Plex+Sans:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- shared structure ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font:400 15px/1.55 var(--body);-webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden}
+.wrap{max-width:52rem;margin:0 auto;padding:40px 28px 60px;position:relative;z-index:2}
+.top{display:flex;align-items:center;gap:12px}
+.mark{font:600 14px/1 var(--display);letter-spacing:.01em;color:var(--text)}
+.top .sp{flex:1}
+.pill{font:500 12.5px/1 var(--body);color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:transparent}
+.hero{margin-top:44px;display:flex;align-items:flex-end;gap:28px}
+.count{font:var(--countfont);color:var(--count);line-height:.85;letter-spacing:-.04em}
+.hero h1{font:var(--h1font);color:var(--text);letter-spacing:-.01em;padding-bottom:6px}
+.hero p{color:var(--dim);font-size:14px;margin-top:6px}
+.tabs{margin-top:36px;display:flex;gap:26px;border-bottom:1px solid var(--line)}
+.tab{padding:0 0 12px;font:500 14px/1 var(--body);color:var(--dim)}
+.tab b{font-weight:500;color:var(--faint);margin-left:6px}
+.tab.on{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+.list{list-style:none;margin-top:8px}
+.cap{position:relative;padding:22px 0 22px var(--gutter);border-bottom:1px solid var(--line)}
+.cap h2{font:var(--titlefont);color:var(--text)}
+.meta{display:flex;gap:10px;align-items:center;margin-top:5px;font-size:12.5px;color:var(--faint)}
+.pri{color:var(--pri)}
+.pri.crit{color:var(--crit)}
+.sum{margin-top:10px;color:var(--soft);max-width:62ch}
+.next{margin-top:8px;color:var(--soft);font-size:14px}
+.next span{color:var(--accent);font-weight:500}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:var(--r);padding:2px 8px}
+.acts{display:flex;align-items:center;gap:16px;margin-top:16px;font-size:13px;color:var(--dim)}
+.btn{background:var(--btn);color:var(--btntext);border:0;border-radius:var(--r);padding:8px 14px;font:500 13px/1 var(--body)}
+.acts .date{margin-left:auto;color:var(--faint);font-size:12px}
+.play{display:inline-flex;align-items:center;gap:6px}
+.wave,.dur{display:none}
+
+/* ---------- A. Graph night ---------- */
+.a{--bg:#16171a;--text:#e6e7ea;--soft:#b4b7bf;--dim:#80848d;--faint:#5b5f68;--line:#26282d;--accent:#9d8cff;--count:#e6e7ea;
+  --pri:#b4b7bf;--crit:#ff8a7a;--btn:#2a2c33;--btntext:#e6e7ea;--r:6px;--gutter:34px;
+  --display:'Instrument Sans',sans-serif;--body:'Instrument Sans',sans-serif;
+  --countfont:500 92px/1 'Instrument Sans';--h1font:400 22px/1.3 'Instrument Sans';--titlefont:500 17px/1.35 'Instrument Sans'}
+.a .graph{position:absolute;right:-60px;top:-40px;width:520px;height:420px;z-index:1;opacity:.9}
+.a .cap::before{content:"";position:absolute;left:9px;top:0;bottom:0;width:1px;background:#2b2e35}
+.a .cap::after{content:"";position:absolute;left:4px;top:28px;width:11px;height:11px;border-radius:50%;background:var(--node,#80848d);box-shadow:0 0 0 4px #16171a,0 0 14px var(--node,#80848d)}
+.a .btn{border:1px solid #3a3d46}
+.a .proj{color:var(--node)}
+
+/* ---------- B. Deep network ---------- */
+.b{--bg:#06111f;--text:#e8f3ff;--soft:#a9bdd3;--dim:#7690ab;--faint:#4f6782;--line:rgba(110,190,255,.14);--accent:#4fd8eb;--count:#e8f3ff;
+  --pri:#a9bdd3;--crit:#ff7ab6;--btn:linear-gradient(180deg,#22b3cf,#1688a8);--btntext:#03111d;--r:10px;--gutter:22px;
+  --display:'Sora',sans-serif;--body:'IBM Plex Sans',sans-serif;
+  --countfont:300 104px/1 'Sora';--h1font:300 24px/1.3 'Sora';--titlefont:400 18px/1.35 'Sora'}
+.b body,.b{background:radial-gradient(1200px 600px at 85% -10%,#0f3a5c 0%,transparent 60%),radial-gradient(900px 500px at -10% 30%,#1a1550 0%,transparent 60%),#06111f}
+.b .net{position:absolute;inset:0 0 auto 0;height:520px;z-index:1;opacity:.75}
+.b .list{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.b .cap{border:1px solid var(--line);border-radius:14px;background:rgba(10,30,52,.55);backdrop-filter:blur(8px);padding:20px 22px}
+.b .cap.focus{border-color:rgba(79,216,235,.55);box-shadow:0 0 0 1px rgba(79,216,235,.25),0 0 40px rgba(79,216,235,.10)}
+.b .tag{border-color:rgba(110,190,255,.18);background:rgba(110,190,255,.05)}
+.b .count{background:linear-gradient(180deg,#fff,#7fe3f1);-webkit-background-clip:text;color:transparent}
+.b .tabs{border-bottom-color:rgba(110,190,255,.14)}
+.b .proj{color:#4fd8eb}
+
+/* ---------- C. Night desk (voice-first) ---------- */
+.c{--bg:#1b1816;--text:#efe8dd;--soft:#c3b9aa;--dim:#8f8577;--faint:#685f54;--line:#2d2925;--accent:#e2a74a;--count:#efe8dd;
+  --pri:#c3b9aa;--crit:#ef8d6b;--btn:#e2a74a;--btntext:#1b1816;--r:999px;--gutter:96px;
+  --display:'Newsreader',serif;--body:'Figtree',sans-serif;
+  --countfont:400 96px/1 'Newsreader';--h1font:400 26px/1.25 'Newsreader';--titlefont:500 21px/1.3 'Newsreader'}
+.c .wave{display:block;position:absolute;left:0;top:26px;width:72px;height:44px}
+.c .wave i{position:absolute;bottom:50%;width:3px;border-radius:2px;background:var(--accent);opacity:.85;transform:translateY(50%)}
+.c .dur{display:block;position:absolute;left:0;top:78px;font-size:11.5px;color:var(--faint);width:90px;white-space:nowrap}
+.c .tab.on{box-shadow:inset 0 -2px 0 var(--accent)}
+.c .tag{border-color:#3a342e}
+.c .proj{color:var(--accent)}
+.c .hero p{font-family:var(--body)}
+
+/* ---------- label strip for the screenshot ---------- */
+.label{position:fixed;right:18px;bottom:16px;z-index:5;font:500 12px/1 var(--body);color:var(--faint);letter-spacing:.02em}
+@media (max-width:600px){
+  .wrap{padding:24px 16px 40px}
+  .count{font-size:72px}.hero{gap:16px;margin-top:32px}.hero h1{font-size:19px}
+  .c{--gutter:0}.c .wave,.c .dur{position:static;margin-bottom:10px}.c .dur{display:none}
+  .a .graph{width:340px;right:-120px;top:-60px;opacity:.6}
+  .acts{flex-wrap:wrap;gap:12px}
+}
+</style>
+</head>
+<body>
+<svg class="graph" viewBox="0 0 520 420" aria-hidden="true"></svg>
+<svg class="net" viewBox="0 0 1280 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+<div class="wrap">
+  <div class="top">
+    <span class="mark">JesseOS</span>
+    <span class="sp"></span>
+    <span class="pill">Board view</span>
+  </div>
+
+  <header class="hero">
+    <div class="count">25</div>
+    <div>
+      <h1>captures waiting for you</h1>
+      <p>Newest in this morning at 6:58. Three marked critical.</p>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <span class="tab on">To review<b>25</b></span>
+    <span class="tab">Filed<b>25</b></span>
+  </nav>
+
+  <ul class="list" id="list"></ul>
+</div>
+<div class="label" id="label"></div>
+
+<script>
+const look = new URLSearchParams(location.search).get('look') || 'a';
+document.documentElement.className = look; document.body.className = look;
+document.getElementById('label').textContent = {a:'A  Graph night',b:'B  Deep network',c:'C  Night desk'}[look];
+
+const caps = [
+ {t:'Explain How AI Works Content Idea',p:'medium',k:'idea',proj:'content',node:'#6fd3a8',d:'Today, 6:58 AM',dur:'0:48',
+  s:'A short video that explains how AI actually works in plain words, using the second-brain graph as the visual. Aimed at tradies who think AI is hype.',
+  n:'Draft a 60-second script outline',tags:['content','ai-explainer','video']},
+ {t:'AI Assistant Ad Concept: Aussie Down-to-Earth AI',p:'critical',k:'idea',proj:'agencyos',node:'#9d8cff',d:'Jul 19, 1:02 AM',dur:'1:12',
+  s:'Ad where the AI assistant talks like a mate from the pub, not a robot. Plain Aussie voice, real job-site problems, no tech words.',
+  n:'Write three opening lines and test them on Lena',tags:['ads','voice','tradies']},
+ {t:'Scale Dashboard Service Across Clients',p:'medium',k:'idea',proj:'agencyos',node:'#9d8cff',d:'Aug 9, 9:24 PM',dur:'2:05',
+  s:'Apply the MDS and LV Solar green-status approach to more clients like Chloe, Katie, Deb and Louisa. Aim for 5 to 8 clients to prove the model.',
+  n:'Outline the service offering and pricing to pitch',tags:['Chloe','Katie','Deb','clients','scaling']},
+ {t:'Subscription Tracker with Renewal Reminders',p:'medium',k:'idea',proj:'personalos',node:'#e2b25c',d:'Jul 18, 5:52 PM',dur:'0:31',
+  s:'Track every subscription in one place and get a nudge a week before each renewal.',
+  n:'List current subscriptions',tags:['personal','money']},
+];
+const L = document.getElementById('list');
+caps.forEach((c,i)=>{
+  const li=document.createElement('li'); li.className='cap'+(i===0?' focus':''); li.style.setProperty('--node',c.node);
+  let bars=''; for(let j=0;j<16;j++){const h=6+Math.abs(Math.sin((j+1)*(i+2)*1.7))*34; bars+=`<i style="left:${j*4.5}px;height:${h}px"></i>`}
+  li.innerHTML=`<div class="wave">${bars}</div><div class="dur">${c.dur} voice note</div>
+   <h2>${c.t}</h2>
+   <div class="meta"><span class="pri ${c.p==='critical'?'crit':''}">${c.p[0].toUpperCase()+c.p.slice(1)}</span><span>${c.k}</span><span class="proj">${c.proj}</span></div>
+   <p class="sum">${c.s}</p>
+   <p class="next"><span>Next step</span>&nbsp; ${c.n}</p>
+   <div class="tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+   <div class="acts"><button class="btn">File to ${c.proj}</button><span>Adjust</span><span>Dismiss</span><span class="play">Play audio</span><span class="date">${c.d}</span></div>`;
+  L.appendChild(li);
+});
+
+/* A: Obsidian-style dot graph, one cluster per project, unreviewed nodes lit */
+if(look==='a'){
+  const g=document.querySelector('.graph'); let s='';
+  const clusters=[[300,170,'#9d8cff',16],[400,250,'#6fd3a8',5],[230,290,'#e2b25c',4],[420,110,'#80848d',3]];
+  let seed=7; const r=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  for(let k=0;k<260;k++){const a=r()*6.283,d=Math.sqrt(r())*175; s+=`<circle cx="${290+Math.cos(a)*d}" cy="${200+Math.sin(a)*d}" r="1.1" fill="#3a3d45"/>`}
+  clusters.forEach(([x,y,col,n])=>{
+    for(let k=0;k<n;k++){const a=r()*6.283,d=18+r()*42,cx=x+Math.cos(a)*d,cy=y+Math.sin(a)*d;
+      s+=`<line x1="${x}" y1="${y}" x2="${cx}" y2="${cy}" stroke="#2f323a" stroke-width="1"/><circle cx="${cx}" cy="${cy}" r="3" fill="${col}" opacity=".85"/>`}
+    s+=`<circle cx="${x}" cy="${y}" r="7" fill="${col}"/><circle cx="${x}" cy="${y}" r="16" fill="${col}" opacity=".12"/>`;
+  });
+  g.innerHTML=s; document.querySelector('.net').remove();
+}
+/* B: glowing network across the top */
+else if(look==='b'){
+  const n=document.querySelector('.net'); let s='<defs><radialGradient id="gl"><stop offset="0" stop-color="#bff6ff"/><stop offset=".4" stop-color="#4fd8eb" stop-opacity=".6"/><stop offset="1" stop-color="#4fd8eb" stop-opacity="0"/></radialGradient></defs>';
+  let seed=3; const r=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  const pts=[]; for(let k=0;k<70;k++) pts.push([700+r()*620, r()*480]);
+  pts.forEach((p,i)=>pts.slice(i+1).forEach(q=>{const d=Math.hypot(p[0]-q[0],p[1]-q[1]); if(d<120) s+=`<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${r()>.8?'#8a7cf0':'#4fd8eb'}" stroke-opacity="${(1-d/120)*.5}" stroke-width="1"/>`}));
+  pts.forEach(p=>{const big=r()>.85; s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${big?9:2}" fill="${big?'url(#gl)':'#7fe3f1'}" opacity="${big?1:.7}"/>`});
+  n.innerHTML=s; document.querySelector('.graph').remove();
+} else { document.querySelector('.net').remove(); document.querySelector('.graph').remove(); }
+</script>
+</body>
+</html>
