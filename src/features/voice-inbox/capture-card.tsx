@@ -77,7 +77,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
       ? "Keep as knowledge"
       : item.suggestedAction === "dismiss"
         ? "Dismiss"
-        : `File to ${bucket}`;
+        : `Add to ${bucket}`;
 
   const handleUndo = () => {
     setError(null);
@@ -135,7 +135,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
   // drop it from the list on the next load; this gives instant feedback).
   if (done) {
     const label =
-      done === "filed" ? "Filed" : done === "kept" ? "Kept as knowledge" : "Dismissed";
+      done === "filed" ? `Added to ${bucket}` : done === "kept" ? "Kept as knowledge" : "Dismissed";
     return (
       <li
         ref={liRef}
@@ -337,7 +337,7 @@ export function CaptureCard({ item, projectNames, focused, registerHandle }: Cap
             </select>
 
             <ActionButton disabled={pending} onClick={doFile}>
-              File
+              Add
             </ActionButton>
             <ActionButton disabled={pending} onClick={doKeep}>
               Keep as knowledge

@@ -104,16 +104,16 @@ export function OverviewBoard({
           <span className="grid size-6 place-items-center rounded-md bg-[var(--ink)] text-[0.62rem] font-semibold tracking-tight text-[var(--paper)]">
             JO
           </span>
-          <span className="text-[0.7rem] font-medium uppercase tracking-[0.16em] text-[var(--ink-faint)]">
-            Overview
+          <span className="text-[0.85rem] font-semibold text-[var(--ink)]">Board</span>
+          <span className="hidden text-[0.75rem] text-[var(--ink-faint)] md:inline">
+            One column per project. Top: notes to review. Below: its to-do list.
           </span>
         </div>
 
         <div className="flex items-baseline gap-4 text-[0.75rem] text-[var(--ink-soft)]">
           <BarStat value={counts.pendingReview} label="to review" strong />
-          <BarStat value={counts.filed} label="filed" />
+          <BarStat value={counts.filed} label="to do" />
           <BarStat value={counts.knowledge} label="knowledge" />
-          <BarStat value={counts.captured} label="all-time" />
         </div>
 
         <div className="flex items-center gap-1">
@@ -154,8 +154,7 @@ export function OverviewBoard({
             aria-pressed={true}
             className="flex items-center gap-1.5 rounded-full border border-[var(--ink)] bg-[var(--ink)] px-2.5 py-1 text-[0.72rem] font-medium text-[var(--paper)]"
           >
-            <span className="size-1.5 rounded-full bg-[var(--paper)]" />
-            Detail
+            Back to inbox
           </button>
         </div>
       </header>
@@ -311,11 +310,11 @@ function BoardColumn({
 }) {
   return (
     <section className="flex w-72 shrink-0 flex-col rounded-xl border border-[var(--line)] bg-[var(--paper-raised)]">
-      <ColumnHeader name={name} domain={domain} badge={pending.length} />
+      <ColumnHeader name={name} domain={domain} badge={pending.length + filed.length} />
       <div className="min-h-0 flex-1 overflow-y-auto px-2.5 pb-3">
         {pending.length > 0 && (
           <>
-            <SectionTag tone="accent">needs you · {pending.length}</SectionTag>
+            <SectionTag tone="accent">to review · {pending.length}</SectionTag>
             {pending.map((item) => (
               <BoardCard
                 key={item.id}
@@ -330,7 +329,7 @@ function BoardColumn({
         )}
         {filed.length > 0 && (
           <>
-            <SectionTag>filed · {filed.length}</SectionTag>
+            <SectionTag>to do · {filed.length}</SectionTag>
             {filed.map((item) => (
               <BoardCard key={item.id} item={item} mode="filed" projectNames={projectNames} />
             ))}
@@ -469,7 +468,7 @@ function BoardCard({
   if (done) {
     const label =
       done === "filed"
-        ? "Filed"
+        ? "Added"
         : done === "kept"
           ? "Kept"
           : done === "archived"
@@ -595,11 +594,11 @@ function BoardCard({
                     ? "Keep"
                     : item.suggestedAction === "dismiss"
                       ? "Dismiss"
-                      : `File → ${bucket}`}
+                      : `Add → ${bucket}`}
                 </button>
                 {item.suggestedAction !== "file" && (
                   <BoardTextButton disabled={pending} onClick={doFile}>
-                    File
+                    Add
                   </BoardTextButton>
                 )}
                 {item.suggestedAction !== "keep_as_knowledge" && (

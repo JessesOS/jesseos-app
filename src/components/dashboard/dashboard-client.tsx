@@ -9,7 +9,7 @@ import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capt
 import { FiledRow } from "@/features/voice-inbox/filed-row";
 import { OverviewBoard } from "@/features/voice-inbox/overview-board";
 
-type View = "review" | "filed" | "knowledge";
+type View = "review" | "filed" | "knowledge" | "project";
 
 const DETAIL_STORAGE_KEY = "jesseos-detail-view";
 
@@ -54,6 +54,16 @@ export function DashboardClient({ data }: { data: DashboardData }) {
       .filter((i) => (project === "all" ? true : i.projectBucket === project))
       .sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
   }, [data.voiceInboxItems, priority, project]);
+
+  // The board gets every note waiting for review (only its own priority
+  // filter applies), never the inbox's project filter.
+  const boardPending = useMemo(
+    () =>
+      data.voiceInboxItems
+        .filter((i) => (priority === "all" ? true : i.priority === priority))
+        .sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]),
+    [data.voiceInboxItems, priority],
+  );
 
   const filedByProject = useMemo(() => groupByProject(data.filedItems), [data.filedItems]);
 
@@ -142,7 +152,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
       <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
         <OverviewBoard
           projects={data.projects}
-          pending={pending}
+          pending={boardPending}
           filedItems={data.filedItems}
           knowledgeItems={data.knowledgePacketItems}
           counts={data.counts}
@@ -160,7 +170,30 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
   const criticalCount = data.voiceInboxItems.filter((i) => i.priority === "critical").length;
   const newest = data.voiceInboxItems[0]?.createdAt;
-  const viewTitle = view === "review" ? "To review" : view === "filed" ? "Filed" : "Knowledge";
+  const viewTitle =
+    view === "review"
+      ? "To review"
+      : view === "filed"
+        ? "To do"
+        : view === "knowledge"
+          ? "Knowledge"
+          : project || "Not placed";
+  const viewLine =
+    view === "review"
+      ? "New voice notes from your phone. Add each one to a project's to-do list, or dismiss it."
+      : view === "filed"
+        ? "Notes you added, grouped by project. Archive one when it's done."
+        : view === "knowledge"
+          ? "Notes you saved to keep as reference."
+          : "Everything open for this project: notes waiting for you, then its to-do list.";
+  const projectPending = data.voiceInboxItems.filter((i) => i.projectBucket === project);
+  const projectTodo = data.filedItems.filter((i) => i.projectBucket === project);
+
+  const openReview = () => {
+    setView("review");
+    setProject("all");
+    setPriority("all");
+  };
   const projectCounts = countByProject([...data.voiceInboxItems, ...data.filedItems]);
 
   const reviewNext = () => {
@@ -171,8 +204,9 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   };
 
   const pickProject = (name: string) => {
-    setView("review");
-    setProject((current) => (current === name ? "all" : name));
+    setView("project");
+    setProject(name);
+    setPriority("all");
   };
 
   return (
@@ -193,11 +227,11 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         {/* left menu */}
         <nav className="hidden border-r border-[var(--line)] px-4 py-7 md:block">
           <MenuGroup label="Voice inbox">
-            <MenuItem active={view === "review"} onClick={() => setView("review")} badge={data.counts.pendingReview}>
+            <MenuItem active={view === "review"} onClick={openReview} badge={data.counts.pendingReview}>
               To review
             </MenuItem>
             <MenuItem active={view === "filed"} onClick={() => setView("filed")} count={data.counts.filed}>
-              Filed
+              To do
             </MenuItem>
             <MenuItem active={view === "knowledge"} onClick={() => setView("knowledge")} count={data.counts.knowledge}>
               Knowledge
@@ -210,7 +244,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
             {projectCounts.map(([name, n]) => (
               <MenuItem
                 key={name}
-                active={view === "review" && project === name}
+                active={view === "project" && project === name}
                 onClick={() => pickProject(name)}
                 count={n}
               >
@@ -223,7 +257,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         <main className="mx-auto w-full max-w-[1100px] px-5 pb-20 pt-6 sm:px-10">
           {/* breadcrumb */}
           <div className="flex gap-2 border-b border-[var(--line)] pb-3.5 text-[0.84rem] text-[var(--ink-faint)]">
-            Voice inbox <span>/</span> <b className="font-medium text-[var(--ink)]">{viewTitle}</b>
+            {view === "project" ? "Projects" : "Voice inbox"} <span>/</span> <b className="font-medium text-[var(--ink)]">{viewTitle}</b>
             <span className="flex-1" />
             {newest && <span className="hidden sm:inline">Last note {newest}</span>}
           </div>
@@ -233,9 +267,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
             <span className="mono text-[var(--ink-soft)]">Voice inbox</span>
             <div>
               <h3 className="text-[1.1rem] font-medium tracking-[-0.01em]">Talk into your phone. It lands here.</h3>
-              <p className="mt-0.5 text-[0.875rem] text-[var(--ink-soft)]">
-                Each note gets a title, a project and a next step. File it, or dismiss it.
-              </p>
+              <p className="mt-0.5 text-[0.875rem] text-[var(--ink-soft)]">{viewLine}</p>
             </div>
           </div>
 
@@ -245,9 +277,18 @@ export function DashboardClient({ data }: { data: DashboardData }) {
               <div className="mono mb-1.5 text-[var(--ink-faint)]">Jesse&rsquo;s notes</div>
               <h1 className="text-[1.875rem] font-medium tracking-[-0.02em]">{viewTitle}</h1>
               <div className="mt-2.5 flex flex-wrap gap-2">
-                <Pill>{data.counts.pendingReview} waiting</Pill>
-                <Pill>{data.counts.filed} filed</Pill>
-                {criticalCount > 0 && <Pill critical>{criticalCount} critical</Pill>}
+                {view === "project" ? (
+                  <>
+                    <Pill>{projectPending.length} to review</Pill>
+                    <Pill>{projectTodo.length} to do</Pill>
+                  </>
+                ) : (
+                  <>
+                    <Pill>{data.counts.pendingReview} to review</Pill>
+                    <Pill>{data.counts.filed} to do</Pill>
+                    {criticalCount > 0 && <Pill critical>{criticalCount} critical to review</Pill>}
+                  </>
+                )}
               </div>
             </div>
             <span className="flex-1" />
@@ -280,8 +321,8 @@ export function DashboardClient({ data }: { data: DashboardData }) {
 
           {/* phone: view switch (the left menu is hidden on small screens) */}
           <div className="mb-4 flex gap-2 md:hidden">
-            <Chip active={view === "review"} onClick={() => setView("review")}>To review {data.counts.pendingReview}</Chip>
-            <Chip active={view === "filed"} onClick={() => setView("filed")}>Filed {data.counts.filed}</Chip>
+            <Chip active={view === "review"} onClick={openReview}>To review {data.counts.pendingReview}</Chip>
+            <Chip active={view === "filed"} onClick={() => setView("filed")}>To do {data.counts.filed}</Chip>
             <Chip active={false} onClick={toggleDetail}>Board</Chip>
           </div>
 
@@ -362,11 +403,11 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           {view === "filed" &&
             (data.filedItems.length === 0 ? (
               <Card>
-                <EmptyLine>Nothing filed yet. File a note and it lands here.</EmptyLine>
+                <EmptyLine>Nothing to do yet. Add a note to a project and it lands here.</EmptyLine>
               </Card>
             ) : (
               filedByProject.map(([bucket, items]) => (
-                <Card key={bucket} title={bucket || "Not placed"} detail={`${items.length} filed`}>
+                <Card key={bucket} title={bucket || "Not placed"} detail={`${items.length} to do`}>
                   <ul className="px-5">
                     {items.map((item) => (
                       <FiledRow key={item.id} item={item} />
@@ -375,6 +416,40 @@ export function DashboardClient({ data }: { data: DashboardData }) {
                 </Card>
               ))
             ))}
+
+          {/* PROJECT: everything open for one project, matching its menu count */}
+          {view === "project" && (
+            <>
+              <Card title="To review" detail={`${projectPending.length} waiting for you`}>
+                {projectPending.length === 0 ? (
+                  <EmptyLine>Nothing waiting for review here.</EmptyLine>
+                ) : (
+                  <ul className="px-5">
+                    {projectPending.map((item) => (
+                      <CaptureCard
+                        key={item.id}
+                        item={item}
+                        projectNames={projectNames}
+                        focused={focusedId === item.id}
+                        registerHandle={registerHandle}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </Card>
+              <Card title="To do" detail={`${projectTodo.length} added`}>
+                {projectTodo.length === 0 ? (
+                  <EmptyLine>Nothing on this project&rsquo;s to-do list.</EmptyLine>
+                ) : (
+                  <ul className="px-5">
+                    {projectTodo.map((item) => (
+                      <FiledRow key={item.id} item={item} />
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            </>
+          )}
 
           {/* KNOWLEDGE */}
           {view === "knowledge" && (

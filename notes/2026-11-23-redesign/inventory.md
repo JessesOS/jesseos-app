@@ -62,3 +62,4 @@ Light grey page, white cards, blue accent, Archivo, left menu in groups, one dar
 - 23 Nov: dismissed "Dashboard Data Ball Time-Lapse Concept", "Cross-check Rich's Google Ads Claims", "Add Client Service Costs to Dashboard" (rows kept).
 - 23 Nov: 22 more cut (16 to review dismissed, 6 filed archived, incl. the untitled 22 Jul capture). Rows kept.
 - 23 Nov: 16 more cut (4 dismissed, 12 archived). 8 captures left: 1 to review, 7 filed. Test Knowledge Packet still there: removing it means deleting the row (no status column), waiting on Jesse's yes.
+- 23 Nov: counts fixed on branch `clear-counts`. Project menu now opens a project page (to review + to do), so its count matches. "To review" clears old filters. Board columns count both parts; the Board no longer inherits the inbox's project filter. "Filed" renamed "To do"; "File to X" is now "Add to X". One plain line per view. Board's "all-time" total removed (it counted cut notes).
