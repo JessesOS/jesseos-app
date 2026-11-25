@@ -5,8 +5,9 @@ import type { DashboardData } from "@/lib/dashboard-data";
 import type { VoiceInboxItem, Priority } from "@/features/voice-inbox/types";
 import { CaptureCard, type CaptureCardHandle } from "@/features/voice-inbox/capture-card";
 import { DoneRow, doneLabel } from "@/features/voice-inbox/done-row";
+import { BinnedList } from "@/features/voice-inbox/binned-list";
 
-type View = "needs" | "done";
+type View = "needs" | "done" | "binned";
 
 /** Personal notes: shown in Done only as a count, never their content. */
 const LIFE_PROJECTS = new Set(["personalos"]);
@@ -34,11 +35,15 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     [data.voiceInboxItems],
   );
 
-  const doneWork = useMemo(
+  const isBinned = (i: VoiceInboxItem) => i.status !== "filed";
+  const workItems = useMemo(
     () => data.doneItems.filter((i) => !LIFE_PROJECTS.has(i.projectBucket)),
     [data.doneItems],
   );
-  const lifeCount = data.doneItems.length - doneWork.length;
+  const doneWork = useMemo(() => workItems.filter((i) => !isBinned(i)), [workItems]);
+  const binnedWork = useMemo(() => workItems.filter(isBinned), [workItems]);
+  const lifeDone = data.doneItems.filter((i) => LIFE_PROJECTS.has(i.projectBucket) && !isBinned(i)).length;
+  const lifeBinned = data.doneItems.filter((i) => LIFE_PROJECTS.has(i.projectBucket) && isBinned(i)).length;
 
   // Search covers Needs you and Done (not Life content).
   const q = query.trim().toLowerCase();
@@ -51,8 +56,9 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     return [
       ...needs.filter(match).map((item) => ({ item, where: "Needs you" })),
       ...doneWork.filter(match).map((item) => ({ item, where: "Done" })),
+      ...binnedWork.filter(match).map((item) => ({ item, where: "Binned" })),
     ];
-  }, [q, needs, doneWork]);
+  }, [q, needs, doneWork, binnedWork]);
 
   // --- keyboard triage (desktop): j/k move, f yes, x bin, u undo ---
   const handlesRef = useRef(new Map<string, CaptureCardHandle>());
@@ -129,12 +135,14 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   }, [view]);
 
   const needsCount = data.counts.pendingReview;
-  const title = q ? "Search" : view === "needs" ? "Needs you" : "Done";
+  const title = q ? "Search" : view === "needs" ? "Needs you" : view === "done" ? "Done" : "Binned";
   const line = q
     ? "Every note, waiting or done. Personal notes aren't searched here."
     : view === "needs"
       ? "The notes waiting on you. Yes does what the AI suggests, Change moves it, Bin drops it."
-      : "Everything settled: where it went and who decided. Undo brings a note back.";
+      : view === "done"
+        ? "Notes you filed, and where each one went. Undo brings a note back."
+        : "Notes you binned. Preview one, then Undo to bring it back or Delete forever.";
 
   const go = (v: View) => {
     setView(v);
@@ -175,11 +183,17 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           <MenuItem active={!q && view === "done"} onClick={() => go("done")}>
             Done
           </MenuItem>
+          <MenuItem active={!q && view === "binned"} onClick={() => go("binned")}>
+            Binned
+          </MenuItem>
           <p className="px-3 pt-5 text-[0.78rem] leading-relaxed text-[var(--ink-faint)]">
             Needs you: notes waiting for your decision.
             <br />
             <br />
-            Done: filed or binned, with where each one went.
+            Done: notes you filed, with where each one went.
+            <br />
+            <br />
+            Binned: notes you dropped. Delete them for good from here.
           </p>
         </nav>
 
@@ -214,6 +228,9 @@ export function DashboardClient({ data }: { data: DashboardData }) {
               <Tab active={view === "done"} onClick={() => go("done")}>
                 Done
               </Tab>
+              <Tab active={view === "binned"} onClick={() => go("binned")}>
+                Binned
+              </Tab>
             </div>
           )}
 
@@ -240,7 +257,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
                         <span className="rounded-md border border-[var(--line)] px-2 py-0.5 text-[var(--ink-soft)]">
                           {where}
                         </span>
-                        {where === "Done" && <span>{doneLabel(item)}</span>}
+                        {where !== "Needs you" && <span>{doneLabel(item)}</span>}
                         <span>{item.createdAt}</span>
                       </div>
                     </li>
@@ -294,26 +311,41 @@ export function DashboardClient({ data }: { data: DashboardData }) {
                   </ul>
                 )}
               </Card>
-              {lifeCount > 0 && (
-                <Card>
-                  <div className="flex items-center gap-3.5 px-5 py-4">
-                    <span aria-hidden className="grid size-8 place-items-center rounded-lg bg-[var(--paper)] text-[0.9rem]">
-                      🔒
-                    </span>
-                    <div>
-                      <p className="text-[0.95rem] font-medium">
-                        {lifeCount} personal {lifeCount === 1 ? "note" : "notes"}
-                      </p>
-                      <p className="text-[0.8rem] text-[var(--ink-faint)]">Private. Only the count shows here.</p>
-                    </div>
-                  </div>
-                </Card>
-              )}
+              <LifeCard count={lifeDone} />
+            </>
+          )}
+
+          {/* BINNED */}
+          {!q && view === "binned" && (
+            <>
+              <Card title="In the bin" detail={`${binnedWork.length} notes, newest first`}>
+                <BinnedList items={binnedWork} onGoNeeds={() => go("needs")} />
+              </Card>
+              <LifeCard count={lifeBinned} />
             </>
           )}
         </main>
       </div>
     </div>
+  );
+}
+
+function LifeCard({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <Card>
+      <div className="flex items-center gap-3.5 px-5 py-4">
+        <span aria-hidden className="grid size-8 place-items-center rounded-lg bg-[var(--paper)] text-[0.9rem]">
+          🔒
+        </span>
+        <div>
+          <p className="text-[0.95rem] font-medium">
+            {count} personal {count === 1 ? "note" : "notes"}
+          </p>
+          <p className="text-[0.8rem] text-[var(--ink-faint)]">Private. Only the count shows here.</p>
+        </div>
+      </div>
+    </Card>
   );
 }
 

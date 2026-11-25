@@ -111,6 +111,47 @@ export async function dismissCapture(id: string): Promise<ActionResult> {
   }
 }
 
+/**
+ * Permanently delete binned notes: the row and its recording. Irreversible.
+ * Only rows already binned (dismissed or archived) are touched, so a note
+ * waiting in Needs you or filed in Done can never be deleted from here.
+ */
+export async function deleteBinned(
+  ids: string[],
+): Promise<{ ok: true; deleted: number } | { ok: false; error: string }> {
+  try {
+    if (ids.length === 0) return { ok: true, deleted: 0 };
+    const supabase = createSupabaseServiceClient();
+
+    const { data: rows, error: readError } = await supabase
+      .from("voice_inbox")
+      .select("id,audio_path")
+      .in("id", ids)
+      .in("status", ["dismissed", "archived"]);
+    if (readError) return { ok: false, error: readError.message };
+    if (!rows || rows.length === 0) return { ok: false, error: "Nothing binned matched." };
+
+    const { error: deleteError } = await supabase
+      .from("voice_inbox")
+      .delete()
+      .in(
+        "id",
+        rows.map((r) => r.id),
+      );
+    if (deleteError) return { ok: false, error: deleteError.message };
+
+    // Rows are gone; clear the recordings too. A failure here only leaves an
+    // orphaned private file, so it doesn't fail the delete.
+    const paths = rows.map((r) => r.audio_path).filter((p): p is string => Boolean(p));
+    if (paths.length > 0) await supabase.storage.from("voice-audio").remove(paths);
+
+    revalidatePath("/");
+    return { ok: true, deleted: rows.length };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
 /** Short-lived signed URL for a capture's raw audio, for playback on the card. */
 export async function getAudioUrl(
   id: string,

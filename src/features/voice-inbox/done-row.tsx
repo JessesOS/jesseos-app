@@ -5,8 +5,8 @@ import { undoReview } from "./actions";
 import type { VoiceInboxItem } from "./types";
 
 /**
- * One settled note: where it went and who decided. Undo sends it back to
- * Needs you (status pending_review). Nothing is ever deleted.
+ * One filed note: where it went and who decided. Undo sends it back to
+ * Needs you (status pending_review). Deleting happens only in Binned.
  */
 export function DoneRow({ item }: { item: VoiceInboxItem }) {
   const [pending, startTransition] = useTransition();
